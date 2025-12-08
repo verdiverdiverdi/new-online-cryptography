@@ -3,6 +3,7 @@
 \usepackage{tikz}
 \usepackage{tikzpeople}
 
+\newcommand{\KGen}{\ensuremath{\mathsf{KeyGen}}}
 \newcommand{\Enc}{\ensuremath{\mathsf{Enc}}}
 \newcommand{\Dec}{\ensuremath{\mathsf{Dec}}}
 
@@ -23,11 +24,11 @@
 \draw[-,thick] (14,5)--(10,5);
 \draw[-,thick] (10,5)--(10,-2.75);
 
-\node[] (Otext) at (12,4.5) {(access throughout.)};
-\node[] (O) at (11.5,4) {$c \gets \Enc(pk,m)$};
+\node[] (Otext) at (12,4.5) {$(pk, sk) \gets \KGen$};
+\node[] (O) at (11.5,4) {$b \gets \{0,1\}$};
 
-\draw[->,thick] (4,4.5) -- (10,4.5) node[midway,above] {$m$};
-\draw[<-,thick] (4,4) -- (10,4) node[midway,above] {$c$};
+%draw[->,thick] (4,4.5) -- (10,4.5) node[midway,above] {$m$};
+\draw[<-,thick] (4,4.5) -- (10,4.5) node[midway,above] {$pk$};
 
 \draw[-,thick,dotted] (10,3.5) -- (14,3.5);
 
