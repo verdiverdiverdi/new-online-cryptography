@@ -1,0 +1,40 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{tikzpeople}
+
+\input{figure-macros}
+
+\begin{document}
+\begin{tikzpicture}
+					\draw[draw=red,fill=red, opacity=0.1] (8,-4.4) rectangle  (18,2.5);
+					\node (KDC) at (13,2) {\Huge \emph{Key Distribution Centre}};
+					\node[alice, monitor, label=Client, minimum size=5cm] (C) at (-5,-3) {};
+					
+					\node[database] (AS) at (10,0) {AS};
+					\node (ASLBL) at (10,1.25) {Authentication Server};
+					\draw [decorate, decoration = {brace}, ultra thick] (12.5,1) --  (12.5,-1);
+					\node (ASLBL) at (15.25,0) {\Huge Authentication};
+					
+					\node (TGSLBL) at (10,-1.75) {Ticket Granting Server};
+					\node[scale=0.65] (TGS) at (10,-3) {\usebox\Server};
+					\draw [decorate, decoration = {brace}, ultra thick] (12.5,-2) --  (12.5,-4);
+					\node (ASLBL) at (15.25,-3) {\Huge Authorisation};
+					
+					\node[bob, monitor, label=Service Server, minimum size=1.5cm, mirrored] (SS) at (10,-6) {};
+					\draw [decorate, decoration = {brace}, ultra thick] (12.5,-5) --  (12.5,-7);
+					\node (ASLBL) at (15.25,-6) {\Huge Service};
+					
+					\draw[->, ultra thick] ([yshift=3.5cm,xshift=3cm]C.east) -- ([yshift=0.5cm]AS.west)  node[midway, above] {1. Request AuthTicket};
+					\draw[<-, ultra thick] ([yshift=2.5cm,xshift=3cm]C.east) -- ([yshift=-0.5cm]AS.west)  node[midway, above] {2. AuthTicket and session key};
+					
+					\draw[->, ultra thick] ([yshift=0.5cm,xshift=3cm]C.east) -- ([yshift=0.5cm]TGS.west)  node[midway, above] {3. Request ServiceTicket};
+					\draw[<-, ultra thick] ([yshift=-0.5cm,xshift=3cm]C.east) -- ([yshift=-0.5cm]TGS.west)  node[midway, above] {4. ServiceTicket and session key};
+					
+					\draw[->, ultra thick] ([yshift=-2.5cm,xshift=3cm]C.east) -- ([yshift=0.5cm,xshift=-1cm]SS.west)  node[midway, above] {5. Request Service};
+					\draw[<-, ultra thick] ([yshift=-3.5cm,xshift=3cm]C.east) -- ([yshift=-0.5cm,xshift=-1cm]SS.west)  node[midway, above] {6. Confirm Service};
+				\end{tikzpicture}
+
+
+\end{document}
