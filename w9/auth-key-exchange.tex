@@ -1,0 +1,55 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage{tikzpeople}
+
+\input{figure-macros}
+
+\begin{document}
+
+				\begin{tikzpicture}[yscale=-0.4,xscale=0.55,>=latex,thick]
+					\edef\InitX{0}
+					\edef\ArrowLeft{1}
+					\edef\ArrowRight{9}
+					\edef\RespX{10}
+					% Set the starting Y coordinate
+					\edef\Y{0}
+					
+					% Draw header boxes
+					\node[alice, monitor, label=Client, minimum size=1.5cm] (Alice) at (-4,10) {};
+					\node[bob, monitor, label=Server, minimum size=1.5cm, mirrored] (Bob) at (14,10) {};
+					\draw[draw=black,fill=black, opacity=0.2] (-1,-1) rectangle  (11,20);
+					\node [rectangle,draw,inner sep=5pt,right] at (\InitX,\Y) {$pk_C, sk_C$};
+					\node [rectangle,draw,inner sep=5pt,left] at (\RespX,\Y) {$pk_S, sk_S$};
+					\NextLine
+					\NextLine
+					\ClientAction{$(x, X=g^x) \gets$ DHKE.KeyGen}
+					\NextLine
+					\NextLine
+					\ClientAction{$\sigma_C \gets$ DSS.Sgn$(sk_C,(id_C, X))$}
+					\NextLine
+					\NextLine
+					\ClientToServer{$id_C,X, \sigma_C$}
+					\NextLine
+					\NextLine
+					\ServerAction{Check Vf$(pk_C,(id_C,X),\sigma_C) = 1$}
+					\NextLine
+					\NextLine
+					\ServerAction{$(y, Y=g^y) \gets$ DH.KeyGen}
+					\NextLine
+					\NextLine
+					\ServerAction{$\sigma_S \gets$ DSS.Sgn$(sk_S,(id_S,Y))$}
+					\NextLine
+					\NextLine
+					\ServerToClient{$id_S,Y,\sigma_S$}
+					\NextLine
+					\NextLine
+					\ClientAction{Check Vf$(pk_S,(id_S,Y),\sigma_S) = 1$}
+					\NextLine
+					\NextLine
+					\ClientAction{$k \gets$ KDF$(Y^x)$}
+					\ServerAction{$k \gets$ KDF$(X^y)$}
+					\NextLine
+					\NextLine
+				\end{tikzpicture}
+
+\end{document}

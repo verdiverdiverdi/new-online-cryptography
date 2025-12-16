@@ -1,0 +1,457 @@
+% FIGURE COMMANDS
+\definecolor{mBlue}{HTML}{22a1dc}
+\definecolor{sBlue}{HTML}{009FE3}
+\definecolor{sYellow}{HTML}{FFED00}
+\definecolor{sRed}{HTML}{E30613}
+\definecolor{sGreen}{HTML}{009640}
+\definecolor{sPurple}{HTML}{440099}
+\definecolor{mGreen}{HTML}{86cd30}
+\definecolor{darkgreen}{HTML}{006400}
+\definecolor{mLightBrown}{HTML}{e68a00}
+\definecolor{lightred}{HTML}{FF9999}
+
+%% COLOUR COMMANDS
+\newcommand{\sBlue}[1]{\textcolor{sBlue}{#1}}
+\newcommand{\sB}[1]{\sBlue{#1}}
+\newcommand{\sRed}[1]{\textcolor{sRed}{#1}}
+\newcommand{\sR}[1]{\sRed{#1}}
+\newcommand{\sGreen}[1]{\textcolor{sGreen}{#1}}
+\newcommand{\sG}[1]{\sGreen{#1}}
+\newcommand{\sPurple}[1]{\textcolor{sPurple}{#1}}
+\newcommand{\sP}[1]{\sPurple{#1}}
+\newcommand{\sYellow}[1]{\textcolor{sYellow}{#1}}
+\newcommand{\sY}[1]{\sYellow{#1}}
+
+%% MATH MODE COLOR BOXES
+\newcommand{\highlight}[2][yellow]{\mathchoice%
+	{\colorbox{#1}{$\displaystyle#2$}}%
+	{\colorbox{#1}{$\textstyle#2$}}%
+	{\colorbox{#1}{$\scriptstyle#2$}}%
+	{\colorbox{#1}{$\scriptscriptstyle#2$}}}%
+
+% ClientAction and ServerAction
+% Print a command executed by the client/server
+% 1st argument: the text
+\newcommand{\ClientAction}[1]{
+	\node[right] at (\InitX, \Y) {#1};
+}
+\newcommand{\ServerAction}[1]{
+	\node[left] at (\RespX, \Y) {#1};
+}
+\newcommand{\SharedAction}[1]{
+	\node at ($1/2*(\InitX, \Y)+1/2*(\RespX, \Y)$) {#1};
+}
+\newcommand{\AdversaryAction}[1]{
+	\node at ($1/2*(\InitX, \Y)+1/2*(\RespX, \Y)$) {\textcolor{red}{#1}};
+}
+% ClientToServer and ServerToClient
+% Draws a message flow from client-to-server or server-to-client, with text above and below
+% 1st argument (optional): line type, default ->
+% 2nd argument: text above
+% 3rd argument: text below
+% Example: \ClientToServer{$Y$}{}
+% Example: \ClientToServer[<->,double]{$Y$}{over an encrypted channel}
+\newcommand{\ClientToServer}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowLeft,\Y) -- node[above] {#2} node[below] {#3} (\ArrowRight,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\ServerToClient}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowRight,\Y) -- node[above] {#2} node[below] {#3} (\ArrowLeft,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\ClientToAdversary}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowLeft,\Y) -- node[above] {#2} node[below] {#3} (\ArrowCenter,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\ServerToAdversary}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowRight,\Y) -- node[above] {#2} node[below] {#3} (\ArrowCenter,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\AdversaryQToClient}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowCenter,\Y) -- node[above] {\textcolor{red}{#2}} node[below] {#3} (\ArrowLeft,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\AdversaryQToServer}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowCenter,\Y) -- node[above] {\textcolor{red}{#2}} node[below] {#3} (\ArrowRight,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\AdversaryToClient}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowCenter,\Y) -- node[above] {#2} node[below] {#3} (\ArrowLeft,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\AdversaryToServer}[3][->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowCenter,\Y) -- node[above] {#2} node[below] {#3} (\ArrowRight,\Y) ;
+	\NextLine[0.5]
+}
+\newcommand{\Encryption}[3][<->]{
+	\NextLine[0.5]
+	\draw[#1] (\ArrowRight,\Y) -- node[above] {#2} node[below] {#3} (\ArrowLeft,\Y) ;
+	\NextLine[0.5]
+}
+% NextLine
+% 1st argument (optional): amount of spacing to increment by, default 1.0
+% Example: \NextLine
+% Example: \NextLine[1.5]
+\newcommand{\NextLine}[1][1.0]{
+	\pgfmathparse{\Y+#1}
+	\edef\Y{\pgfmathresult}
+}
+%
+% stage separator line
+%
+\newcommand{\StageSeparator}[2][1.0]{
+	\draw[very thick,dotted,blue] (\InitX,\Y+0.5) node[above=-0.1cm,anchor=north west] {\bf #2} -- (\RespX,\Y+0.5);
+}
+\newcommand{\Separator}[2][1.0]{
+	\draw[very thick,dotted,blue] (\InitX,\Y+0.5) node[above=-0.1cm,anchor=north west] {\bf #2} -- (\RespX,\Y+0.5);
+}
+\newcommand{\StageRight}[1]{
+	\node[above=-0.1cm,anchor=north east,StageSeparatorColor] at
+	(\RespX,\Y+0.5) {\bf #1};
+}
+
+% TIKZ PICTURES
+
+\tikzset{cloud/.pic={
+		\node[cloud, cloud puffs=10.8,cloud puff arc=110, aspect=4, draw, text width=2cm
+		] () at (0,0) {\tikzpictext};
+	}}
+
+\tikzset{database/.style={
+		cylinder,
+		aspect=1,
+		draw,
+		thick,
+		fill,
+		shape border rotate=90,
+		minimum height=1.5cm,
+		left color=sGreen!30,
+		right color=sGreen!30,
+		middle color=sGreen!30,
+		minimum width=2cm,
+		path picture={
+			\draw[black, thick] let \p1=($(path picture bounding box.north east)-(path picture bounding
+			box.south west)$) in 
+			foreach \XX in {1,2,3}  {([yshift=-\XX*\y1/4]path picture bounding box.north west) 
+				arc(180:360:\x1/2 and 0.25*\x1/2)};
+		}}}
+
+\makeatletter
+\tikzset{
+	monodatabase/.style={
+		path picture={
+			\draw (0, 1.5*\database@segmentheight) circle [x radius=\database@radius,y radius=\database@aspectratio*\database@radius];
+			\draw (-\database@radius, 0.5*\database@segmentheight) arc [start angle=180,end angle=360,x radius=\database@radius, y radius=\database@aspectratio*\database@radius];
+			\draw (-\database@radius,-0.5*\database@segmentheight) arc [start angle=180,end angle=360,x radius=\database@radius, y radius=\database@aspectratio*\database@radius];
+			\draw (-\database@radius,1.5*\database@segmentheight) -- ++(0,-3*\database@segmentheight) arc [start angle=180,end angle=360,x radius=\database@radius, y radius=\database@aspectratio*\database@radius] -- ++(0,3*\database@segmentheight);
+		},
+		minimum width=2*\database@radius + \pgflinewidth,
+		minimum height=3*\database@segmentheight + 2*\database@aspectratio*\database@radius + \pgflinewidth,
+	},
+	database segment height/.store in=\database@segmentheight,
+	database radius/.store in=\database@radius,
+	database aspect ratio/.store in=\database@aspectratio,
+	database segment height=0.1cm,
+	database radius=0.25cm,
+	database aspect ratio=0.35,
+}
+\makeatother
+
+\tikzset{
+	cylinder/.style={draw,
+		shape=cylinder,
+		name=nodename, % Can be defined arbitrarily
+		alias=cyl, % Will be used by the ellipse to reference the cylinder
+		aspect=1.5,
+		minimum height=8.5cm,
+		minimum width=2.25cm,
+		left color=blue!30,
+		right color=blue!60,
+		middle color=red!20, % Has to be called after left color and middle color
+		outer sep=-0.5\pgflinewidth, % to make sure the ellipse does not draw over the lines
+		%shape border rotate=90
+}}
+
+\tikzset{XOR/.style={draw,circle,append after command={
+			[shorten >=\pgflinewidth, shorten <=\pgflinewidth,]
+			(\tikzlastnode.north) edge (\tikzlastnode.south)
+			(\tikzlastnode.east) edge (\tikzlastnode.west)
+		}
+	}
+}
+
+\newcommand{\boundellipse}[3]% center, xdim, ydim
+{(#1) ellipse (#2 and #3)
+}
+
+\newcommand{\plotcurve}[3][thick, every plot/.style={smooth}]{
+	% plot curve y^2 = x^3 + a x + b in range [-3,3]^2
+	% parameter 1 (optional): style options for curve (color, etc)
+	% parameter 2: curve parameter a
+	% parameter 3: curve parameter b
+	\draw[gray] (-3,-3) rectangle (3,3);
+	\draw[->,>=latex,gray] (-3,0) -- (3,0);
+	\draw[->,>=latex,gray] (0,-3) -- (0,3);
+	\draw[name path=curve, #1] plot[id=curve#2#3, raw gnuplot] function {
+		f(x,y) = y**2 - x**3 - #2*x - #3;
+		set xrange [-3:3];
+		set yrange [-3:3];
+		set view 0,0;
+		set isosample 50,50;
+		set cont base;
+		set cntrparam levels incre 0,0.1,0;
+		unset surface;
+		splot f(x,y);
+	};
+}
+
+% For an explanation of the tangent coordinate system, check http://tex.stackexchange.com/a/25940 
+\tikzset{
+	tangent/.style={
+		decoration={markings, mark=at position #1 with {
+				\coordinate (tangent point-\pgfkeysvalueof{/pgf/decoration/mark info/sequence number}) at (0pt,0pt);
+				\coordinate (tangent unit vector-\pgfkeysvalueof{/pgf/decoration/mark info/sequence number}) at (1,0pt);
+				\coordinate (tangent orthogonal unit vector-\pgfkeysvalueof{/pgf/decoration/mark info/sequence number}) at (0pt,1);
+		}},
+		postaction=decorate
+	},
+	use tangent/.style={
+		shift=(tangent point-#1),
+		x=(tangent unit vector-#1),
+		y=(tangent orthogonal unit vector-#1)
+	},
+	use tangent/.default=1
+}
+
+\usepackage{tikz-3dplot}
+\newsavebox\Server
+\sbox\Server{\tdplotsetmaincoords{70}{20}
+	\begin{tikzpicture}[tdplot_main_coords]
+		\begin{scope}[canvas is xz plane at y=3]
+			\path (1,0)  coordinate(aux);
+			\path (1pt,0) coordinate (BTL) (1cm-1pt,0) coordinate (BTR)
+			(1cm,-2.5cm+1pt) coordinate (BBR) (1cm,-1pt) coordinate (BTR');
+		\end{scope}
+		\begin{scope}[canvas is xz plane at y=0]
+			\draw[rounded corners={2*sqrt(2)*1pt},fill=gray!10] (0,-2.5) rectangle (1,0);
+			\draw[rounded corners={2*sqrt(2)*1pt},white] (0.4pt,-2.5cm+0.4pt) 
+			rectangle (1cm-0.4pt,0-0.4pt);
+			\path (1pt,0) coordinate (FTL) (1cm-1pt,0) coordinate (FTR);
+			\path[fill=white,rounded corners={2*sqrt(2)*1pt}]
+			($(aux)+(-1,0)$) -| ++(1,-2.5) -- (1,-2.5) |- (0,0)--cycle;
+			\path[left color=gray!10,right color=gray!30,rounded corners=1pt] (BTL) -- (BTR) -- (FTR) -- (FTL)
+			-- cycle;
+			\path[top color=gray!80,bottom color=gray!30,shading angle=20,
+			rounded corners=1pt]
+			(1cm,-2.5cm+1pt) -- (BBR) -- (BTR') -- (1cm,-1pt) -- cycle;
+			\draw[ultra thin,fill=gray!40] foreach \X in {0.2,0.3,...,0.81} 
+			{ \foreach \Y in {-0.2,-0.3,...,-2.3} 
+				{(\X-0.03,\Y-0.03) rectangle (\X+0.03,\Y+0.03)}};
+			\begin{scope} 
+				\clip (0,-2.5) rectangle (1,-0.6pt);
+				\fill[gray!10] (0.5,0) circle[radius=0.35cm];
+				\shade[ball color=black!80] (0.5,0) circle[radius=0.25cm];
+			\end{scope}
+			\begin{scope}[rounded corners=1mm] 
+				\clip (0.42,-0.7) -- (0.42,-0.9) -- (0.22,-1.1)
+				-- (0.42,-1.3) -- (0.42,-2.1) -- (0.58,-2.1) 
+				-- (0.58,-1.3) -- (0.78,-1.1) -- (0.58,-0.9) -- (0.58,-0.7) -- cycle;
+				\fill[gray!80] (0.42,-0.7) -- (0.42,-0.9) -- (0.22,-1.1)
+				-- (0.42,-1.3) -- (0.42,-2.1) -- (0.58,-2.1) 
+				-- (0.58,-1.3) -- (0.78,-1.1) -- (0.58,-0.9) -- (0.58,-0.7) -- cycle;
+				\fill[gray!20] (0.03+0.42,-0.7) -- (0.03+0.42,-0.9) -- (0.03+0.22,-1.1)
+				-- (0.03+0.42,-1.3) -- (0.03+0.42,-2.1) -- (0.03+0.58,-2.1) 
+				-- (0.03+0.58,-1.3) -- (0.03+0.78,-1.1) -- (0.03+0.58,-0.9) -- (0.03+0.58,-0.7) -- cycle;       
+			\end{scope} 
+			\shade[ball color=black!80] (0.5,-1.1) circle[radius=0.1cm];
+		\end{scope}
+	\end{tikzpicture}
+}
+	
+\tikzset{meter/.append style={draw, inner sep=10, rectangle, font=\vphantom{A}, minimum width=30, line width=.8, path picture={\draw[black] ([shift={(.1,.3)}]path picture bounding box.south west) to[bend left=50] ([shift={(-.1,.3)}]path picture bounding box.south east);\draw[black,-latex] ([shift={(0,.1)}]path picture bounding box.south) -- ([shift={(.3,-.1)}]path picture bounding box.north);}}}
+
+\tikzset{
+	lightbulbon/.pic={
+		% Bulb
+		\draw[thick] (0,0) ellipse (1 and 1.5);
+		% Base
+		\draw[thick] (-0.5,-1.5) -- (-0.5,-2.5);
+		\draw[thick] (0.5,-1.5) -- (-0.5,-1.5);
+		\draw[thick] (0.5,-1.5) -- (0.5,-2.5);
+		\draw[thick] (-0.5,-2.5) -- (0.5,-2.5);
+		% Screws
+		\draw[thick] (0.5,-1.75) -- (-0.5,-1.75);
+		\draw[thick] (0.5,-2) -- (-0.5,-2);
+		\draw[thick] (0.5,-2.25) -- (-0.5,-2.25);
+		% Filament
+		\draw[thick] (-0.3,-0.5) -- (0.3,-0.5);
+		\draw[thick] (-0.3,-0.5) -- (0,-1);
+		\draw[thick] (0.3,-0.5) -- (0,-1);
+		% Light rays
+		\foreach \angle in {0,30,...,360} {
+			\draw[thick, yellow] (0,0) -- (\angle:1);
+		}
+	}
+}
+
+\tikzset{
+	lightbulboff/.pic={
+		% Bulb
+		\draw[thick] (0,0) ellipse (1 and 1.5);
+		% Base
+		\draw[thick] (-0.5,-1.5) -- (-0.5,-2.5);
+		\draw[thick] (0.5,-1.5) -- (-0.5,-1.5);
+		\draw[thick] (0.5,-1.5) -- (0.5,-2.5);
+		\draw[thick] (-0.5,-2.5) -- (0.5,-2.5);
+		% Screws
+		\draw[thick] (0.5,-1.75) -- (-0.5,-1.75);
+		\draw[thick] (0.5,-2) -- (-0.5,-2);
+		\draw[thick] (0.5,-2.25) -- (-0.5,-2.25);
+		% Filament
+		\draw[thick] (-0.3,-0.5) -- (0.3,-0.5);
+		\draw[thick] (-0.3,-0.5) -- (0,-1);
+		\draw[thick] (0.3,-0.5) -- (0,-1);
+	}
+}
+
+\tikzset{
+	capacitor/.pic={
+		% Plates
+		\draw[thick] (-1,0) -- (1,0);
+		\draw[thick] (-1,1) -- (1,1);
+		% Connecting lines
+		\draw[thick] (-1,0) -- (-1,-0.5);
+		\draw[thick] (1,0) -- (1,-0.5);
+		\draw[thick] (-1,1) -- (-1,1.5);
+		\draw[thick] (1,1) -- (1,1.5);
+	}
+}
+
+\tikzset{
+	photonH/.pic={
+		% Plates
+		\draw[<->,thick] (0,1) -- (2,1);
+		\draw[<->,thick] (1,0) -- (1,2);
+		\draw[<->,thick,color=kr] (0.25,1) -- (1.75,1);
+	}
+}
+
+\tikzset{
+	basisHV/.pic={
+		% Plates
+		\draw[->,thick] (0,0) -- (0:2);
+		\draw[->,thick] (0,0) -- (90:2);
+		\draw[->,thick] (0,0) -- (180:2);
+		\draw[->,thick] (0,0) -- (270:2);
+	}
+}
+
+\tikzset{
+	basisAD/.pic={
+		% Plates
+		\draw[->,thick] (0,0) -- (45:2);
+		\draw[->,thick] (0,0) -- (135:2);
+		\draw[->,thick] (0,0) -- (225:2);
+		\draw[->,thick] (0,0) -- (315:2);
+	}
+}
+
+\tikzset{
+	photonV/.pic={
+		% Plates
+		\draw[<->,thick] (0,1) -- (2,1);
+		\draw[<->,thick] (1,0) -- (1,2);
+		\draw[<->,thick,color=sBlue] (1,0.25) -- (1,1.75);
+	}
+}
+
+\tikzset{
+	photonA/.pic={
+		% Plates
+		\draw[<->,thick] (0,1) -- (2,1);
+		\draw[<->,thick] (1,0) -- (1,2);
+		\draw[<->,thick,color=sGreen] (0.3,1.6) -- (1.6,0.3);
+	}
+}
+
+\tikzset{
+	photonD/.pic={
+		% Plates
+		\draw[<->,thick] (0,1) -- (2,1);
+		\draw[<->,thick] (1,0) -- (1,2);
+		\draw[<->,thick,color=sPurple] (0.3,0.3) -- (1.6,1.6);
+	},
+	polarglass/.pic={
+		% Define cube vertices
+		\coordinate (A) at (2,0);
+		\coordinate (B) at (3,0);
+		\coordinate (C) at (3,1);
+		\coordinate (D) at (2,1);
+		\coordinate (E) at (2.25,0.25);
+		\coordinate (F) at (3.25,0.25);
+		\coordinate (G) at (3.25,1.25);
+		\coordinate (H) at (2.25,1.25);
+		
+		% Draw front face
+		\draw[thick] (A) -- (B) -- (C) -- (D) -- cycle;
+		
+		% Draw top face
+		\draw[thick] (D) -- (H) -- (G) -- (C);
+		
+		% Draw side face
+		\draw[thick] (C) -- (G) -- (F) -- (B);
+	}
+}
+
+\tikzset{meter/.append style={draw, inner sep=10, rectangle, font=\vphantom{A}, minimum width=30, line width=.8,
+		path picture={\draw[black] ([shift={(.1,.3)}]path picture bounding box.south west) to[bend left=50] ([shift={(-.1,.3)}]path picture bounding box.south east);\draw[black,-latex] ([shift={(0,.1)}]path picture bounding box.south) -- ([shift={(.3,-.1)}]path picture bounding box.north);}}}
+	
+\tikzset{
+	cylinder/.style={draw,
+		shape=cylinder,
+		name=nodename, % Can be defined arbitrarily
+		alias=cyl, % Will be used by the ellipse to reference the cylinder
+		aspect=1.5,
+		minimum height=8.5cm,
+		minimum width=2.25cm,
+		left color=blue!30,
+		right color=blue!60,
+		middle color=red!20, % Has to be called after left color and middle color
+		outer sep=-0.5\pgflinewidth, % to make sure the ellipse does not draw over the lines
+		%shape border rotate=90
+}}
+
+\tikzset{database/.style={
+		cylinder,
+		aspect=1,
+		draw,
+		thick,
+		fill,
+		shape border rotate=90,
+		minimum height=1cm,
+		left color=black!30,
+		right color=black!30,
+		middle color=black!30,
+		minimum width=1cm,
+		path picture={
+			\draw[black, thick] let \p1=($(path picture bounding box.north east)-(path picture bounding
+			box.south west)$) in
+			foreach \XX in {1,2,3}  {([yshift=-\XX*\y1/4]path picture bounding box.north west)
+				arc(180:360:\x1/2 and 0.25*\x1/2)};
+}}}
+
+\newcommand{\data}[5]{\draw [#1] (#3,#2) -- ++(#4-#3,0) node[midway,above] {\small #5} ;}
+% Include Tikz images
+\newcommand{\inputTikz}[2][1]{%
+	\centering
+	\scalebox{#1}{
+		\input{#2.tikz}%
+}}

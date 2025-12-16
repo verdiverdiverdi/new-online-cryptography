@@ -1,0 +1,16 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage{tikzpeople}
+
+\begin{document}
+
+				\begin{tikzpicture}
+					\node[alice, monitor, label=Alice, minimum size=1.5cm] (Alice) at (0,0) {};
+					\node[bob, mirrored, label=Server, minimum size=1.5cm] (Bob) at (12,0) {};
+					\draw[->, thick] (2,1)  -- (10,1) node[midway, above] {SYN=4412};
+					\draw[<-, thick] (2,-1)  -- (10,-1) node[midway, above] {SYN=2257, ACK=4413};
+					\draw[->, thick] (2,-3)  -- (10,-3) node[midway, above] {ACK=2258};
+					
+				\end{tikzpicture}
+
+\end{document}
