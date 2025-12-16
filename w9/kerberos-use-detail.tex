@@ -1,0 +1,23 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{tikzpeople}
+\input{figure-macros}
+
+\begin{document}
+
+\begin{tikzpicture}
+
+				\node[alice, monitor, label=Client, minimum size=1.5cm] (C) at (-5,0) {};
+				\node[bob, monitor, label=Service Server, minimum size=1.5cm, mirrored] (SS) at (5,0) {};
+				\node (AUTH) at (10,1)  {${id}_{A},{id}_{B},k_{A,B},T_3 \gets$ Dec$_{K_{B,TGS}}(\textnormal{ServTicket})$ };
+				\node (AUTH) at (10,0)  {${id}_{A},T_4 \gets$ Dec$_{K_{A,B}}(\textnormal{Authenticator})$ };
+				
+				\draw[->, ultra thick] ([yshift=0.5cm,xshift=1cm]C.east) -- ([yshift=0.5cm,xshift=-1cm]SS.west)  node[midway, above] {5. ServTicket, Enc$_{k_{A,B}}({id}_{A},T_4)$};
+				\draw[<-, ultra thick] ([yshift=-0.5cm,xshift=1cm]C.east) -- ([yshift=-0.5cm,xshift=-1cm]SS.west)  node[midway, above] {6. Enc$_{k_{A,B}}(T_4+1)$};
+
+
+\end{tikzpicture}
+
+\end{document}

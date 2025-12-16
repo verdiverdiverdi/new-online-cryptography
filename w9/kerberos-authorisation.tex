@@ -1,0 +1,24 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{tikzpeople}
+\input{figure-macros}
+
+\begin{document}
+
+\begin{tikzpicture}
+
+					\node[alice, monitor, label=Client, minimum size=1.5cm] (C) at (-5,0) {};
+					\node (TGSLBL) at (10,1.25) {Ticket Granting Server};
+					\node[scale=0.65] (TGS) at (10,0) {\usebox\Server};
+					\draw [decorate, decoration = {brace}, ultra thick] (12.5,1) --  (12.5,-1);
+					\node (ASLBL) at (15.25,0) {\Huge Authorisation};
+					
+					
+					\draw[->, ultra thick] ([yshift=0.5cm,xshift=1cm]C.east) -- ([yshift=0.5cm]TGS.west)  node[midway, above] {3. Request Service Ticket};
+					\draw[<-, ultra thick] ([yshift=-0.5cm,xshift=1cm]C.east) -- ([yshift=-0.5cm]TGS.west)  node[midway, above] {4. ServiceTicket and session key};
+
+\end{tikzpicture}
+
+\end{document}
