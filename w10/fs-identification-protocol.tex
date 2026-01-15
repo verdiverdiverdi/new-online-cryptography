@@ -1,0 +1,45 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage{tikzpeople}
+\begin{document}
+			\begin{tikzpicture}
+				\tikzset{database/.style={
+						cylinder,
+						aspect=1,
+						draw,
+						thick,
+						fill,
+						shape border rotate=90,
+						minimum height=1cm,
+						left color=black!30,
+						right color=black!30,
+						middle color=black!30,
+						minimum width=1cm,
+						path picture={
+							\draw[black, thick] let \p1=($(path picture bounding box.north east)-(path picture bounding
+							box.south west)$) in
+							foreach \XX in {1,2,3}  {([yshift=-\XX*\y1/4]path picture bounding box.north west)
+								arc(180:360:\x1/2 and 0.25*\x1/2)};
+				}}}
+				
+				
+				%% DELIVERY SERVER
+				%				\node[database] (DB1) at (3.5,0) {};
+				\node (PkGen) at (0,-1) {{$pk=v=s^2 \bmod{n}$}, {$sk = s$}};
+				\node (PkGen) at (7,-1) {{$pk=v=s^2 \bmod{n}$}};
+				\node[alice, monitor, label=P, minimum size=1cm] (Alice) at (0,0) {};
+				\node[bob, mirrored, monitor, label=V, minimum size=1cm] (Bob) at (7,0) {};
+				
+				\draw[->, thick] (1,0.25)  -- (6,0.25) node[midway, above] {$x=r^2 \bmod{n}$};
+				\draw[<-, thick] (1,-0.25)  -- (6,-0.25) node[midway, above] {$c \in \{0,1\}$};
+				\draw[->, thick] (1,-0.75)  -- (6,-0.75) node[midway, above] {$y = r \cdot s^{c} \bmod{n}$};
+				
+				%				\node[] (AGen) at (-3,1) {${x_1} \getsr \{1,\ldots,q-1\}$};
+				%				\node[] (AEncap) at (-3,0.25) {${Y_1} \gets g^{{x_1}}$ mod$p$};
+				\node[] (ADecap) at (0,-1.5) {};
+				%				\node[] (BGen) at (10,1) {${x_2} \getsr \{1,\ldots,q-1\}$};
+				%				\node[] (BEncap) at (10,0.25) {${Y_2} \getsr g^{{x_2}}$ mod$p$};
+				\node[] (BDecap) at (7,-1.5) {check $y^2 = x \cdot v^{c}$ mod $n$};
+				
+			\end{tikzpicture}
+\end{document}
