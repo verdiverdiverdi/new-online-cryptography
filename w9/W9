@@ -1,0 +1,769 @@
+W9 Key Exchange and Protocols
+
+9.1 Learning Outcomes
+
+This week we will introduce one more number theoretic family of hard problems, those that depend on the discrete log.
+From these we will give one further example of a signature scheme and a method for two parties to publicly derive shared secret keys (with some caveats).
+
+We will then discuss the distinction between cryptographic primitives (SKE, MAC, PKE, DSS, key exchange etc) and cryptographic protocols.
+The latter is, in some sense, a larger object that makes proper use of primitives to achieve some more general communication goal, or perhaps many communication goals.
+We will examine (briefly) the Kerberos protocol, suitable for closed communication environments with a trusted party who holds all keys, and then Transport Layer Security (TLS), suitbale for open communication networks where parties have no preexisting relationship, like the internet.
+
+Learning outcomes
+- Give basic definitions from group theory and give simple examples of finite cyclic groups,
+- Define the discrete logarithm problem and give examples of groups for which it is easy and presumed hard,
+- Describe the DSA and prove its correctness, give the name of a standard that replaced it,
+- Describe Diffie--Hellman key exchange, the variant of the discrete logarithm problem it relies on, and the situations in which it is insecure,
+- Explain the distinction between cryptographic primitives and cryptographic protocols,
+- Describe the security goals of Kerberos and Transport Layer Security (TLS), and the scenarios they are appropriate for.
+
+9.2 The discrete log problem
+
+The discrete log problem requires a mathematical object called a group, and in particular a finite cyclic group.
+We will give the formal definitions and then discuss them and specialise to concrete examples.
+
+Definition (Group)
+
+A group is a set \(G\) along with an operation \(\circ \colon G \times G \rightarrow G\) that satisfies
+
+- (identity) there exists an element \(e \in G\) such that \(e \circ g = g \circ e = g\) for all \(g \in G\),
+- (inverse) for all \(g \in G\) there exists an \(h \in G\) such that \(g \circ h = h \circ g = e\), written \(h = g^{-1}\),
+- (associativity) for all \(g,h,i \in G\) we have \((g \circ h) \circ i = g \circ (h \circ i)\).
+
+So a group is a set \(G\) with some operation \(\circ\) that takes two group elements and outputs a group element.
+There is a unique element of the group, the 'identity' \(e \in G\) that does nothing to all elements of the group, e.g. \(e \circ g = g\).
+For each element of the group, there is a unique inverse element, that produces the identity, e.g. \(h = g^{-1}\) and \(g \circ h = e\).
+Finally, we 'can bracket however we like'.
+
+A prototypical example of a group is the integers with addition: \((\mathbb{Z}, +)\).
+
+Question:
+	What is the identity for \((\mathbb{Z}, +)\)?
+	What about an inverse for some element?
+	Is associativity satisfied?
+	
+Answer:
+	The identity is zero, for any \(x \in \mathbb{Z}\) we have \(x + 0 = 0 + x = x\).
+	The inverse of \(x \in \mathbb{Z}\) is \(-x\) as \(x + (-x) = -x + x = 0\).
+	Associativity is 'obviously true'. (How could you prove this?)
+
+We call the order of a group the number of elements in it, so \((\mathbb{Z}, +)\) has 'infinite order', as there are infinitely many integers.
+
+An example of a finite group is the integers modulo \(N\) under addition, written \((\mathbb{Z}_N, +)\).
+This can be thought of as the integers \(\{0,1,\dots,N-1\}\) with addition defined the take the remainder when it exceeds \(N-1\).
+For example, if \(N=5\) then \(3 + 3 = 1\) because \(6 = kN + r = 1 \cdot 5 + 1\) with \(0 \leq r < N\).
+Similarly, we think of some integer \(x > N-1\) as its remainder modulo \(N\), so we think of \(132 = 26 \cdot 5 + 2\) as \(2\).
+
+Question:
+	Let \(N = 7\) and consider \((\mathbb{Z}_7, +)\).
+	What is the identity, what are the inverses of all the elements?
+	What is its order?
+	
+	What about for arbitrary \(N\)?
+	
+Answer:
+	The identity is 0. For \(x = 0,1,2,3,4,5,6\) the inverses are \(x^{-1} = 0,6,5,4,3,2,1\).
+	Indeed, for \(x \in \mathbb{Z}_7\) we see \(x + (N-x) = N = 1 \cdot N + 0\).
+	Its order is \(7\).
+	
+	For arbitrary \(N\) the identity is \(0\), the inverse of \(x\) is \(N-x\) and its order is \(N\).
+
+We may also define the order of an element of a group \(G\).
+That is, rather than the order of \(G\), which is either infinite (e.g. the integers) or finite (e.g. the integers modulo some \(N\)), we can define the order of each \(g \in G\).
+This is 'the minimum number of \(g\) required to receive the identity'.
+
+For example, consider \((\mathbb{Z}_4, +)\).
+The order of the element \(1\) is four because \(1 + 1 + 1 + 1 = 0\) but none of \(1\), \(1+1\) or \(1+1+1\) give the identity.
+The order of \(2\) is two because \(2 + 2 = 0\) but \(2 \neq 0\).
+We always say the order of the identity itself is one.
+
+Sometimes the order of an element is also infinite, for example \(1\) in the integers, not the integers modulo \(N\).
+There's no sum \(1 + 1 + \cdots \) that returns the identity zero in this case.
+
+We say an element \(g \in G\) is a generator of \(G\), or generates \(G\), if its order equals the order of \(G\).
+This is because it gives each element of \(G\) before returning to the identity: \(1 = 1\), \(1 + 1 = 2\), \(1 + 1 + 1 = 3\), \(1 + 1 + 1 + 1 = 0\) in \((\mathbb{Z}_4, +)\).
+
+Example:
+	Consider again \((\mathbb{Z}_4, +)\).
+	Then the order of the group is \(N = 4\).
+	The order of \(1\) is also four, so \(1\) generates this group.
+	The order of \(2\) is two, less than four, so \(2\) does not generate this group.
+	
+	In general, \((\mathbb{Z}_N, +)\) is always generated by \(1\), and possibly other group elements.
+	Let \(N = 5\), can you find group elements that generate \((\mathbb{Z}_5, +)\) that are different to \(1\)?
+	
+We now give the definition of a finite cyclic group.
+This is a group with some extra conditions.
+
+Definition (Finite cyclic group)
+
+A group \((G, \circ)\) is a finite cyclic group when
+
+- the order of \(G\) is finite,
+- there exists an element \(g \in G\) that generates \(G\) (equivalently, the order of \(g\) equals the order of \(G\)).
+
+Effectively, a finite cyclic group is finite and has a generator \(g\) that we can write every other element of the group in terms of.
+It is such finite cyclic groups that the discrete log problem is defined over.
+
+Before we give the definition of the discrete log problem, we give one more example of a class of finite cyclic groups.
+We have already seen \((\mathbb{Z}_N, +)\), which are addition groups.
+Now we consider multiplication groups.
+
+Again let \(N\) be a modulus and define \((\mathbb{Z}_N^*, \cdot)\) as the set of integers relatively prime to \(N\) under multiplication.
+Recall \(g\) and \(N\) are relatively prime when gcd\((g, N) = 1\), or equivalently their prime factorisations share no prime factors.
+Euler's totient function tells us how many such \(g\) there are, so the order of \((\mathbb{Z}_N^*, \cdot) = \phi(N)\).
+
+Example:
+	Let \(N = 4\). Of \(\{0,1,2,3\}\) only \(1\) and \(3\) are relatively prime with \(4\), indeed \(\phi(4) = 2\).
+	Then \((\mathbb{Z}_4^*, \cdot) = (\{1,3\}, \cdot)\).
+	
+	Let \(N = 5\). Since \(N\) is prime we know \(phi(N) = N-1\) and indeed \(1,2,3,4\) are all relatively prime with \(5\).
+	Then \((\mathbb{Z}_5^*, \cdot) = (\{1,2,3,4\}, \cdot)\).
+	
+We must convince ourselves that we have described a group!
+The identity is simple: it is always \(1\) because multiplication by \(1\) 'does nothing', \(1 \cdot g = g \ cdot 1 = g\).
+Multiplication is associative by design.
+
+To find an inverse we must find a \(h\) such that \(gh = kN + 1\), so that in \((\mathbb{Z}_N^*, \cdot)\) \(gh = hg = 1\).
+Thankfully, by the extended Euclidean algorithm from (link here please) we can find integers \(x,y\) such that
+
+\[1 = \textnormal{gcd}(g,N) = gx + Ny,\]
+
+which we may rearrange to find \(gx = -Ny + 1\), so the remainder is indeed \(1\) and \(h = x\) is the inverse of \(g\).
+This is why the multiplicative group modulo \(N\) may only contain those integers that are relatively prime to \(N\): it is what guarantees an inverse exists!
+Therefore, we are convinced that \((\mathbb{Z}_N^*, \cdot)\) is a group for all \(N\).
+
+Finally, we note that we use 'exponent' notation in such groups: \(g \cdot g \cdot g = g^3\), just like multiplication of integers.
+If a multiplication group is a finite cyclic group \((G, \cdot)\) of order \(q\) with some generator \(g\) we therefore have \(G = \{g^0 = g^q = e, g^1 = g, g^2, g^3, \dots, g^{q-1}\}\) 
+
+The discrete logarithm problem:
+
+We may finally describe DLog (D(iscrete) Log(arithm)).
+
+Definition (DLog)
+Let \((G, \circ)\) be a finite cyclic group of prime order \(q\) and let \(g\) be a generator.
+An instance of the DLog problem on \((G, q, g)\) is:
+
+i. sample \(x\) uniformly from \(\{1, 2, \dots, q\}\),
+ii. compute \(h = g \circ g \circ \cdots \circ g\) (\(x\) applications of \(\circ\) to \(g\)),
+iii. return \((G, q, g, h)\).
+
+A solution to instance \((G, q, g, h)\) is the \(x\) above.
+
+The DLog problem takes a finite cyclic group and a generator, then samples a uniform integer \(x\) up to the order of \(G\), and returns a description of the group and its generator \((G, q, g)\) and \(h = g \circ \cdots \circ g\).
+This element \(h\) is a uniform element of \(G\).
+The problem is to return \(x\).
+
+The choice of group is important!
+
+Question:
+	Suppose \(q\) is any prime and \((G, q, g) = \(((\mathbb{Z}_q, +), q, 1)\), that is a prime order addition group and the generator chosen is \(1\).
+	Is DLog easy?
+	
+Answer:
+	Yes! Suppose you receive \(h = 1 + 1 + \cdots + 1\), or \(x\) additions of \(1\).
+	Then \(x = h\) and you can always solve DLog.
+	
+In fact, we define DLog over multiplication groups, where it is not known to be easy.
+The exact construction of such groups is beyond the scope of this course, but for well chosen primes \(p\) the group \((\mathbb{Z}_p^*, \cdot)\) will not itself have prime order, but it will have a large cyclic 'subgroup' of prime order \(q\), which is where we consider DLog.
+The interested reader can consult [Katz--Lindell, 3rd Ed, Sec 9.3.3.].
+
+It is enough to understand that there is some multiplicative group \((G, \cdot)\) of large prime order \(q\) that is cyclic with generator \(g\), so \(G = \{g^0 = e, g^1 = g, g^2, \cdots, g^{q-1}\}\).
+
+What can we do with DLog?
+We can build a digital signature!
+
+9.3 The Digital Signature Algorithm (DSA)
+
+The DSA is a no longer (!) standardised digital signature scheme that we give as an example of how one may build digital signatures from DLog.
+It was standardised until February 2024 in NIST FIPS 186-4 [https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf] and replaced in the revision FIPS 186-5 with similar signature schemes defined over more efficient, secure and easy to implement groups.
+Since NIST depreciated it, important implementations like OpenSSH have similarly removed it, see e.g. https://lwn.net/Articles/958048/ and the associated mailing list.
+
+Below we describe a slight variant of the NIST FIPS 186-4 standard which is given a proof of security in the article [https://link.springer.com/chapter/10.1007/978-3-540-46588-1_19].
+It uses multiplicative groups and hash functions.
+Under an ideal assumption on the hash function \(H\) and assuming the hardness of DLog in \((G, q, g)\), this variant is EUF-CMA secure.
+
+Let \((G, \cdot)\) be a multiplicative group of prime order \(q\) and with generator \(g\).
+This group is realised as a subgroup of \((\mathbb{Z}_p^*, \cdot)\) for some well chosen prime \(p\), as described above.
+Let \(H \colon {\{0,1\}}^* \rightarrow {\{0,1\}}^n\) be a hash function (recall link here please).
+
+DSA = \((\)KeyGen, Sgn, Vf)\)
+
+KeyGen:
+	Let \(x \gets \{1, \dots, q\}\) be uniform, and \(h = g^x\).
+	Return \((pk, sk) = (h, x)\).
+
+Sgn\((sk = x, m)\):
+	Let \(k \gets \{1, \dots, q\}\) be uniform and \(r = g^k\).
+	Let \(z = H(m,r)\).
+	Let \(s = k^{-1}(z + xr)\).
+	Return \(\sigma = (r, s)\).
+
+Vf\((pk = h, m, \sigma)\):
+	Parse \(sigma = (r, s)\) and let \(z = H(m,r)\).
+	Let \(w = s^{-1}\).
+	Let \(v = g^{wz} \cdot h^{wr}\).
+	Return [[v = r]].
+	
+Let's step through each algorithm.
+First KeyGen raises the generator to a uniform power \(x\), thus \(h = g^x\) is a uniform element of \(G\).
+Recovering the secret key \(x\) from \((G,q,g,h)\) is exactly an instance of DLog on \((G,q,g)\).
+(EUF-CMA security requires more than that is is hard to recover the secret key from the public key, but this 'intuitively' is where DLog appears.)
+
+Sgn then samples some uniform \(k\) to create a uniform group element \(r = g^k\).
+It hashes the message and randomness to create \(z\), which is formally a bit string, but considered as the integer this bit string represents.
+Finally a value \(s\) is calculated using the inverse of \(k\) modulo \(q\) and the secret key \(x\), and the signature is \(r\) and \(s\), a group element and an integer.
+
+In Vf the integer \(z\) is recomputed and the integer \(s\) inverted modulo \(q\) is called \(w\).
+We calculate the group element \(v\) using the above and the public key, and if it equals \(r\) then we output one: the signature is valid.
+
+To see that this is correct, consider \(v = g^{wz} \cdot h^{wr}\).
+As \(h = g^x\} we have \(v = g^{wz} \cdot g^{wxr} = g^{w(z + xr)}\).
+The exponent \(w(z + xr) = s^{-1}(z + xr) = k\), with this last equality following from the third line of Sgn.
+Finally \(g^k = r\) as required.
+
+The correct like-for-like replacement for DSA is EdDSA, as standardised in FIPS 186-5.
+It has a slightly different design that leads to a cleaner proof of security and operates over 'elliptic curve' groups, which have better efficiency and security properties than the simpler groups we describe.
+The interested reader can consult [Katz--Lindell 3rd Ed, Sec. 13.5].
+
+9.4 Key exchange via Diffie--Hellman
+
+In 1976 Diffie and Hellman introduced the concept of public key cryptography to the world via the paper [https://ieeexplore.ieee.org/document/1055638].
+In that paper they introduce a method for key exchange: two parties sharing data over a public channel such that ultimately they share a secret key, known only to them.
+We will examine this key exchange, often called Diffie--Hellman key exchange (DHKE), in more detail below.
+
+An important note is that while we suggested a method to achieve key exchange using PKE (sample a key, encrypt it using the public key pk_A of A, and send the ciphertext to A to decrypt), the original suggestion of Diffie--Hellman came before any public key encryption scheme was known, and (with some modification) is still in use today.
+
+Another important note is that, as we will see, DHKE is not secure against adversaries who do more than eavesdrop.
+This means it does not solve all of our problems, we still require message authentication.
+
+Question:
+	Can we provide message authentication in the public key setting?
+	
+Answer:
+	Yes! Use a digital signature!
+
+Before we define DHKE, we must think about what security means for key exchange.
+We will only define security for passive (eavesdropping) adversaries.
+
+An intuitive understanding of key exchange against passive adversaries is the following: you and a friend are standing at opposite corners of a room where a party is happening.
+You must have a conversation by shouting to each other across the party, and at the end of the party you must share a secret key, such that no other partygoer knows it.
+
+Question:
+	This does not quite capture the situation on a large, ad hoc, open communication network, like the internet.
+	Can you suggest why?
+	
+Answer:
+	You know your friend and that you want to talk to them in advance, and you can see them/know what they look like to authenticate them.
+	
+Nonetheless, a passive adversary can be modelled as one of the other partygoers, they hear you shouting but do not interact with either party in any way, or attempt to shout over your conversation.
+That is, the adversary should know any public parameters of the key exchange scheme, and take as input the full 'transcript' the conversation.
+You should think of the public parameters as parameters that are standardised in standards, e.g. particular groups in which DLog and related problems are believed to be hard.
+If, given all this information, the adversary cannot distinguish the key that was genuinely exchanged from a random bit string, then it has no learnt anything.
+
+Formally, we let \(\Pi\) be a key exchange scheme, \(pp\) be public parameters, and A, B be two parties communicating.
+We denote by <A,B>\((\Pi, pp)\) the transcript between A and B when performing key exchange\(\Pi\) using \(pp\), i.e. all the messages communicated, in order, and the direction they were sent in.
+We let \(k \in {\{0,1\}}^n\) be the key known to A and B after performing key exchange \(\Pi\).
+
+The key exchange game for \(\Pi\) and \(pp\) against passive adversary \(\mathcal{A}\) is defined as follows.
+
+1. Sample \(b \in \{0,1\}\) and \(\hat{k} \in {\{0,1\}}^n\} uniformly,
+2. let trans = <A,B>\((\Pi, pp)\) and A and B share key \(k\),
+3. if \(b=0\) then \(\mathcal{A}\) receives \(pp\), \(k\) and trans as input, else it receives \(pp\), \(\hat{k}\) and trans as input,
+4. \(\mathcal{A}\) outputs \(b'\).
+
+We say that \(\mathcal{A}\) wins when \(b = b'\).
+We say \(\Pi\) with \(pp\) is a passively secure key exchange if for all efficient adversaries the probability they win is not noticeably different from one half.
+
+Let's unpack.
+It's a distinguishing game, just like e.g. IND-CPA.
+In one world (\(b=0\)), the adversary receives the public parameters, the transcript and the genuine key \(k\) that A and B share after performing the key exchange.
+In the other, instead the adversary receives a uniformly random bit string \(\hat{k}\).
+If it cannot tell these two worlds apart then it learns nothing about the genuine key \(k\) from the information it receives.
+
+We will now define \(\Pi =\) DHKE.
+It functions over \(pp\) that describe a finite cyclic group \(G\) with prime order \(q\) and generator \(g\): \(pp = (G, q, g)\).
+This group \(G\) is realised as a subgroup of a group of order \(p = kq + 1\), for some integer \(k\).
+So \((pp = (G, q, g, p)\).
+
+1. Each party samples some uniform value in \(\{1,\dots,q-1\}\), say A samples \(x_A\) and B samples \(x_B\).
+2. A computes \(Y_A = g^{x_A}\) mod \(p\) and B computes \(Y_B = g^{x_B}\) mod \(p\).
+3. A sends \(Y_A\) to B and B sends \(Y_B\) to A.
+4. A sets \(k_A = Y_B^{x_A}\) mod \(p\) and B sets \(k_B = Y_A^{x_B}\) mod \(p\).
+
+(eamonn: alice-bob-dhke.pdf)
+
+We need to check that A and B indeed share the same \(k\).
+First \(k_A = Y_B^{x_A} = {(g^{x_B})}^{x_A} = g^{x_A x_B}\) mod \(p\).
+Similarly, \(k_B = Y_A^{x_B} = {(g^{x_A})}^{x_B} = g^{x_A x_B}\) mod \(p\).
+So indeed \(k = k_A = k_B\)!
+
+Some notes are in order.
+First, you may note that the shared key \(k\) is a group element, not a bit string, so how can we use it in cryptographic primitives?
+When we consider computing on groups, we formally consider something called an 'efficiently computable representation' of \(G\).
+The full details are not necessary, but such a representation associates each distinct group element to a distinct binary string: e.g. perhaps \(g^4 \leftrightarrow 0101\cdots 11100\).
+We use this binary representation within a KDF (link to W7 please) to extract a bit string to use as a key from the DHKE.
+
+Second, this approach is standardised in NIST's SP 800-56A Revision 3 [https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-56Ar3.pdf], especially Sections 5.5.1.1 and 5.6.1.1.4.
+Our finite cyclic group \(G\) of prime order \(q\) and generator \(g\) should be picked from groups in this document.
+Moreover, \(G\) is realised as a subgroup of a larger prime group of order \(p = kq + 1\), so all the operations are taken modulo \(p\).
+We will practice with some concrete examples in the problem set this week.
+
+Finally, rather than A and B communicating \(Y_A\) and \(Y_B\), one could imagine them storing them on a public server, as in the image above.
+Then to compute a shared key with A, all B needs to do is look up \(Y_A\) on the server and compute \(Y_A^{x_B}\) mod \(p\).
+However, this 'static' form of DHKE is no longer used.
+Instead the 'ephemeral' form of DHKE, where fresh \(x_A\) and \(x_B\) are sampled for each key exchange, is an important part of the security of TLS, Signal and Whatsapp.
+
+(eamonn: alice-bob-dhke-ephemeral.pdf)
+
+Attacks and Security against Diffie--Hellman Key Exchange:
+
+We must ask ourselves, is DHKE secure?
+If so, under which circumstances?
+
+To do so we introduce a slight variant of the DLog problem called DDH (Decisional Diffie Hellman).
+Like DLog it is defined over a particular finite cyclic group \(G\) of prime order \(q\) with generator \(g\).
+We are interested in this problem because it is proven that if DDH is hard for \((G,q,g)\) then DHKE using \((G,q,g)\) is a passively secure key exchange.
+
+The DDH game on \((G, q, g)\) for adversary \(\mathcal{A}\) is defined as
+
+1. sample a uniform \(b \in \{0,1\}\), and uniform \(x,y,z \in \{0,\dots, q-1\}\).
+2. if \(b = 0\) then \(\mathcal{A}\) receives \((G,q,g), g^x, g^y, g^{xy})\) as input, else it receives \((G,q,g), g^x, g^y, g^z)\) as input.
+3. \(\mathcal{A}\) outputs \(b'\).
+
+We say that \(\mathcal{A}\) wins when \(b = b'\).
+We say DDH is hard on \((G,q,g)\) if for all efficient adversaries the probability they win is not noticeably different from one half.
+
+So again, it is a distinguishing type game.
+If \(b=0\) the adversary gets a description of the group and \(g^x, g^y, g^{xy}\).
+This is reminiscent of \(g^{x_A}, g^{x_B}\) and \(g^{x_A x_B}\) that are communicated in DHKE.
+If \(b=1\) the adversary gets a description of the group and \(g^x, g^y, g^z\).
+Here \(g^z\) is a uniform element of the group, independent of \(g^x\) and \(g^y).
+The intuition is that if the adversary cannot distinguish these two worlds, it cannot distinguish the real key \(k\) from the uniformly sampled \(\hat{k}\) in the key exchange game. 
+
+So how hard is DDH?
+If one can solve DLog the one can solve DDH: recover \(x\) from \(g^x\), similarly \(y\) from \(g^y\) and then simply check whether the last group element equals \(g^{xy}\) or not.
+So DDH cannot be harder than DLog.
+In fact, DDH is presumed hard in the groups standardised in NIST's SP 800-56A Revision 3.
+
+The elephant in the room is, what happens when an adversary is active, rather than passive?
+There is a simple man in the middle attack.
+An adversary 'sits in the middle' of the communcation between A and B, pretending to be one to the other.
+A communicates with the adversary, believe them to be B, and ends up performing key exchange and sharing a key with... the adversary!
+Similarly B.
+
+(eamonn: alice-bob-mitm-dhke.pdf)
+
+This is a disaster, as A and B both believe they have exchanged keys with each other, and may subsequently continue to communicate with the adversary.
+Cryptographic protocols (of which more later), additionally use digital signatures to ensure the authenticity of communication.
+In short: provided the digital signature is EUF-CMA secure, and used correctly, we already have the cryptographic tools required to safely use passively secure (ephemeral) key exchange.
+As always, the devil is in the detail, especially the phrase 'used correctly'.
+
+9.5 Cryptographic Protocols
+
+We have two similar phrases: cryptographic primitive and cryptographic protocol.
+What is the difference?
+
+Question:
+	No wrong answers! Before reading ahead, do you have an intuitive idea?
+
+We've seen many cryptographic primitives before
+
+(eamonn: primitives.pdf)
+
+Question:
+	Which primitives are represented? What security notions have we defined for them?
+
+Answer:
+	We have a
+		- digital signature scheme, and EUF-CMA,
+		- hash function and collision resistance, second preimage resistance and preimage resistance, and
+		- a secret key encryption scheme and IND-CPA (or AEAD).
+	
+	
+Cryptographic primitives are 'fundamental objects' that perform transformations on their inputs.
+They have associated definitions of security that allow us to know whether they are 'good' or not.
+E.g. public key encryption uses a public key to encrypt a message, and we have IND-CCA as a definition of security.
+
+Protocols are much broader, or larger in scope.
+They consist of a set rules that govern how two (or more) parties communicate.
+
+(eamonn: tcp-ip.png)
+
+Cryptographic protocols are protocols that use cryptographic primitives to achieve some notion of security (security 'goals').
+In particular, they govern how parties communicate over (possibly open, public) networks while trying to achieve security goals.
+We consider adversaries that 'control' the network to some extent.
+For example, they may be able to overwrite messages, reverse their direction, drop (certain) messages etc.
+
+An example of goal a cryptographic protocol may try to achieve is authenticated key exchange, that is key exchange where you are certain with which party you are communicating and exchanging keys.
+Here is a sketch of a protocol that attempts to achieve this goal (caution: not standardised or secure!).
+
+(eamonn: auth-key-exchange.pdf)
+
+Question:
+	Which primitives are being used in the above sketch of authenticated key exchange?
+	Why intuitively might it be designed this way?
+	
+Answer:
+	Diffie--Hellman key exchange, a digital signature, and a key derivation function.
+	The DHKE is vulnerable to a man in the middle attack.
+	Digital signatures are used so both server and client can check the authenticity of the messages they receive.
+	If the digital signature is EUF-CMA secure then an adversary should not be able to forge one for fresh messages, which here correspond to the fresh key exchange values.
+	The key derivation function ensures the output key is indistinguishable from uniform.
+
+Formalising adversarial models and security goals for protocols is hard.
+There are many more 'moving parts', and ways in which an adversary can interact.
+For this week, we will instead consider some protocols that see use in different settings, especially TLS (Transport Layer Security), arguably the most important (and certainly most used) cryptographic protocol of all.
+We will examine the settings these protocols are appropriate for, and the security they provide.
+We begin with Kerberos.
+
+9.6 Kerberos: an authentication protocol requiring a trusted third party
+
+Kerberos was developed at MIT in 1989 with the most recent version (v5 1.22) released in August of 2025.
+It imagines a scenario where a set of clients (say employees at a company, students at a university etc) all share a 'trusted third party'.
+In general, a trusted third party is some server or administrator who is trusted to store data, generate and share keys, and create or forward messages 'properly', where 'properly' means according to some protocol.
+
+Question:
+	What might be the benefits and drawbacks of a trusted third party?
+	
+Answer:
+	There are many possible answers.
+	A benefit that comes to mind in the cryptographic context is that the trusted third party may generate secret keys for any client, share them with that client and then be able to use all of secret key cryptography.
+	A drawback might be that certain communication networks have no obvious trusted third party, perhaps because there is no universally trusted party, or because the network is highly distributed (the internet).
+	Another drawback might be that if the trusted third party is somehow compromised, it holds much important cryptographic information (keys etc) and is a powerful adversary.
+
+In the case of the Kerberos architecture, the trusted third party takes the form of a pair of servers, the Authentication Server (AS) and the Ticket Granting Server (TGS).
+Together these servers are called the Key Distribution Centre (KDC), so you can think of KDC \(= (\)AS, TGS\()\).
+The AS and the TGS share a secret secret key, \(k_{AS, TGS}\), since they both part of the KDC, you may imagine them generating and sharing a secret key as part of their role as trusted third party.
+
+Every client has a secret key known only to the client and the KDC.
+It is imagined that such a secret key will be generated and shared on the first day of work for an employee, upon enrolment for a student, or in some form of 'onboarding' process carried out when a client joins.
+
+The final part of the Kerberos architecture is a collection of 'service servers'.
+These can be thought of as resources a client may want to access or use, e.g. a database, a printer, or a powerful server.
+
+A typical Kerberos session is formed of three distinct parts
+
+- a client authenticates to the AS (the first part of the KDC), and receives a response,
+- the client uses this response in communication with the TGS (the second part of the KDC) and asks for access to a particular service server, and receives a response called a 'ticket',
+- the client uses this ticket in communication with the particular service server to gain access.
+
+(eamonn: kerberos-overview.pdf)
+
+In the above image we see a client (call them A) wanting to connect to a service server (B).
+A performs three rounds of communication, first with the AS, then with the TGS, and finally with B.
+In the language of Kerberos, A authenticates to the AS (proves their identity) and A is authorised by the TGS (allowed to perform some task).
+After authentication and authorisation, A is able to access and use the service provided by B.
+
+We examine each round of communication in turn.
+
+Authentication:
+
+(eamonn: kerberos-authentication.pdf)
+
+A authenticates to the AS once per login, for example when they start work for the day.
+A and the AS share a secret key, say \(k_{A,AS}\), which is often derived from a password.
+
+Question:
+	Is deriving a secret key from a password a good idea? Why or why not?
+
+Answer:
+	It's not ideal. There is a lot less entropy in a password than a uniformly random bit string.
+	However, it makes the onboarding process simpler and the human interaction with the machine simpler.
+	There is a Kerberos extension [https://datatracker.ietf.org/doc/html/rfc4556] that uses public key cryptography here.
+
+In the message from A to the AS, the request for authentication is made (Request AuthTicket).
+The response, A receives an encyption (under the shared key \(k_{A,AS}\)) of an AuthTicket and session key.
+
+(eamonn: kerberos-authentication-detail.pdf)
+
+In more detail, A sends their unique identifier \(id_A\) and a string that says 'I would like to be authorised by the TGS' (written TGS).
+Then the AS randomly samples a key \(k_{A, TGS}\) that will be used in the next round of communication between A and the TGS.
+To A it returns Enc\(_{k_{A,AS}}(TGS, k_{A,TGS}, T_1,\) AuthTicket\()\).
+
+In particular, A may decrypt this ciphertext, as it has \(k_{A,AS}\).
+So it knows the key \(k_{A,TGS}\).
+It also has a validity period \(T_1\), that describes how long the AuthTicket is valid for.
+
+The AuthTicket itself requires some more discussion.
+It the encryption of information useful to the TGS under the key shared by the AS and the TGS: \(k_{AS, TGS}\).
+In particular, AuthTicket is Enc\(_{k_{AS,TGS}}(id_A, TGS, k_{A, TGS}, T_1)\).
+
+Authorisation:
+
+To recap, A has a key to use with the TGS, \(k_{A, TGS}\), and an AuthTicket, which is information encrypted under the key shared by the AS and the TGS.
+This AuthTicket is valid until \(T_1\).
+
+(eamonn: kerberos-authorisation.pdf)
+
+In the next round of communication, now with the TGS, A requests a service ticket for B.
+This will be some data that allows A to interact with B.
+The TGS performs some checks over the request, and if satisfied, then supplies the service ticket for B.
+
+(eamonn: kerberos-authorisation-detail.pdf)
+
+In more detail, A sends its AuthTicket to the TGS, along with an encryption Enc\(_{k_{A,TGS}}(id_A, T_2)\) of their identity and a fresh valid timestamp \(T_2\), and finally the unique identifier of the service server B they wish to interact with.
+In particular, AuthTicket is encrypted under \(k_{AS, TGS}\) so it may be decrypted by the TGS.
+Subsequently the TGS has \(k_{A, TGS}\) so it may decrypt the second part of A's message.
+
+It performs some checks, and if they pass, it samples a uniform key \(k_{A,B}\) for A to use with B.
+It forms a ServTicket as an encryption of \((id_A, id_B, k_{A,B}, T_3)\) where \(T_3\) is a short (perhaps a minute) validity period.
+ServTicket is the encryption of the above under the key \(k_{B,TGS}\), which is a key shared by B and the TGS.
+
+Finally, it responds to A with an encryption of \((k_{A,B},B,T_3,\) ServTicket\()\) under the key they share, \(k_{A,TGS}\).
+
+Question:
+	What checks should the TGS make?
+
+Answer:
+	It should check that the two \(id_A\) it receives in its two decryptions are equal.
+	It should check that \(T_1\) and \(T_2\) are valid timestamps, i.e. not in the past.
+	Intuitively this ensures A is indeed A and these tickets are not being replayed from a previous interaction.
+
+A can decrypt the response from the TGS to receive \(k_{A,B}\), the key is should use with B, the validity period to start interaction with B, and the ServTicket to send to B.
+
+Use:
+
+Finally A can interact with B.
+To recap, A has a key to use with B, \(k_{A,B}\), and a ServTicket, which is information encrypted under the key shared by the TGS and B.
+This ServTicket is valid until \(T_3\).
+
+(eamonn: kerberos-use.pdf)
+
+In the final round of communication, now with the service server B, A is going to request to use the service provided by B.
+B performs some checks over the request, and if satisfied, then allows A to use the service, and (optionally) confirms this with a response.
+
+(eamonn: kerberos-use-detail.pdf)
+
+In more detail, A sends ServTicket and an encryption under \(k_{A,B}\) of a fresh valid timestamp \(T_4\) and their identity \(id_A\).
+B decrypts ServTicket using \(k_{B,TGS}\) to receive \((id_A, id_B, k_{A,B},T_3)\) and uses \(k_{A,B}\) to receive \(id_A, T_4\).
+
+Question:
+	What checks should B perform?
+
+Answer:
+	B should check the two \(id_A\) it receives in the two decryptions are equal.
+	B should check that the \(id_B\) it receives in the first decryption is their own unique identifier.
+	B should check that \(T_3\) and \(T_4\) are valid.
+	Intuitively, this ensures A is indeed A, the ticket from the TGS was granted for B and these tickets are not being replayed from a previous interaction.
+
+A can decrypt the response and check it equals \(T_4 + 1\) to ensure they have been granted access.
+
+Question:
+	Think about the Kerberos authentication protocol and its architecture.
+	How necessary is a trusted third party? What are the potential strengths and weaknesses of this approach?
+	
+Answer:
+	A trusted third party is integral to Kerberos.
+	Each client A must share a secret key with the AS, \(k_{A,AS}\).
+	Each service server B must share a secret key with the TGS, \(k_{B,TGS}\).
+	Key management becomes simple with a trusted third party, and efficient secret key cryptography may be used.
+	Many choices are left to the adminstrator, for example, what are good values for the timestamples \(T_i\)?
+	How should the password policy try and mitigate the weaknesses of password based key derivation?
+	What symmetric key cryptography should be used? (In the full generality of Kerberos, one has to choose encryption, MACs and hashes etc).
+	What choices would you make?
+
+Kerberos has uses in particular settings, but is insufficient for general use on the internet.
+On the internet you may have no prior relationship with a server you wish to communicate with, and no relationship of trust.
+Therefore we require more than secret key cryptography, we also need the power of public key!
+
+9.7 Transport Layer Security (TLS), or all your dreams come true
+
+What is TLS? From the TLS 1.3 standard [https://datatracker.ietf.org/doc/rfc8446/] itself
+
+'The primary goal of TLS is to provide a secure channel between two communicating peers.'
+
+Often these general statements are the hardest to achieve, and such is definitely true of TLS over its history.
+Originally (as Secure Sockets Layer or SSL) it was designed to secure online banking and retail, i.e. wherever financial objects are transacted, but now used universally with much stronger security goals.
+
+(eamonn: transparency-report-tls-usage.png)
+
+The primary security goals of TLS are
+
+- Authentication: the server side of the channel is always authenticated; the client side is optionally authenticated.
+- Confidentiality: data sent over the channel after establishment is only visible to the endpoints. (TLS does not hide the length of the data it transmits.)
+- Integrity: data sent over the channel after establishment cannot be modified by attackers without detection.
+
+Importantly! These properties should be true even in the face of an adversary with complete control of the network.
+
+The secondary security goals of TLS are
+
+- Interoperability: independent programmers should be able to develop applications utilising TLS that will then be able to successfully exchange cryptographic parameters without knowledge of one another’s code.
+- Extensibility: TLS seeks to provide a framework into which new public key and bulk encryption methods can be incorporated as necessary.
+- Relative efficiency: Cryptographic operations tend to be highly CPU intensive, particularly public key operations. For this reason, [we have] incorporated an optional session caching scheme to reduce the number of connections that need to be established from scratch.
+
+At the highest level, TLS may be viewed as two protocols.
+First, a 'handshake' protocol that negotiates parameters and which cryptographic algorithms to use, establishes shared secrets (i.e. keys) and authenticates parties to one another.
+Then a 'record' protocol that protects data as described intuitively above.
+The record protocol uses the secrets established in the handshake protocol in secret key cryptography primitives, e.g. SKE and MAC.
+
+(eamonn: tls-high.pdf)
+
+The birth of TLS was 1994, with the unpublished SSL version 1.
+Subsequently the history (TLStory?) is 1995: SSLv2, 1996: SSLv3, 1999: TLS 1.0, 2006: TLS 1.1, 2008: TLS 1.2, 2014: development of TLS 1.3 begins, 2018: TLS 1.3.
+From SSLv3 you can find standards online at the IETF.
+We give an overview of this history below, it is not given in full detail.
+
+Why so many protocols?
+
+- SSLv2: this early protocol had many flaws.
+The handshake protocol was vulnerable to 'downgrade' attacks, where a malicious server negotiated to use legacy (broken) cryptography.
+The same key was used for encryption and message authentication.
+The only allowed hash function was MD5, already presumed weak by this time.
+It was depreciated in 2011!
+
+- SSLv3: was a complete redesign from SSLv2 and begins to look like a modern protocol.
+In the image below 'application data' is the record protocol and everything that comes before is the handshake protocol.
+This rough design is shared by all versions going forwards.
+It was vulnerable to the POODLE (Padding Oracle On Downgraded Legacy Encryption) attack, which takes advantage of padding oracles in CBC mode encryption.
+It was depreciated in 2015!
+
+(eamonn: modern-protocol.png)
+
+- TLS 1.1: TLS 1.0 adopted minor improvements, so we focus instead on TLS 1.1.
+Its main improvement was a far more cryptographically sound handling of IVs and of padding for modes of encryption that require it.
+Nonetheless, it does not support any AEAD (Authenticated Encryption with Associated Data) modes of operation.
+Informal depreciation began in 2018 and it was formally depreciated in 2020!
+
+- TLS 1.2: the oldest version still standardised for use.
+It added support for AEAD, fixed some issues with negotiating which modes of operation could be used and in general was a big upgrade from TLS 1.1
+It is the most commonly supported TLS version 'in the wild'.
+The image below shows the percentage of the most visited 150,000 websites in the world that support a given version.
+Does anything surprise you?
+
+(eamonn: protocol-support-june-2025.png)
+
+We focus on the handshake of TLS 1.2, since after it completes the two parties share secret keys for use in the record protocol and the server is authenticated to the client.
+In internet applications, that means e.g. you know you are visiting the real wikipedia, but wikipedia does not know that you are the real you.
+It is possible, but uncommon, to authenticate the client to the server as well.
+
+(eamonn: tls-12-handshake.pdf)
+
+The handshake occurs over two rounds of communication, starting with the client sending the Client Hello (CHello).
+(Before this there is a TCP SYN and ACK, where the client and server open a communication channel, so there is a non cryptographic 'zero round' too.)
+Terms in {} are optional and ignored in our description.
+Terms in [] are encrypted using shared secret keys derived during the handshake protocol.
+
+At a high level:
+	- CHello tells the server the handshake is beginning, contains some randomness sampled by the client, and crucially contains the version of TLS to be used and the 'cipher suites' the client supports.
+	These cipher suits are combinations of PKE, SKE and hash functions that will be used during the handshake and record protocols.
+	
+	- Server Hello (SHello) responds with some server randomness, and similarly contains the version of TLS the server can use and which cipher suites it supports.
+	
+	- Server Certificate (SCert) is a chain of certificates granted by certificate authorities (these are bodies that keep track of public keys) and the servers pubic key.
+	
+	- In Client Key Exchange (CKeyExchange) the client samples some more randomness, encrypts this under the servers public key, received in SCert, and sends it to the server.
+	
+	- Using the randomness shared thus far (in CHello, SHello and sent in CKeyExchange) both server and client can derive a shared secret key.
+	
+	- In ClientFinished the client encrypts the transcript of the protocol so far, and other shared information under the shared secret key, and sends it to the server.
+	
+	- In ServerFinished the server does the same.
+	
+	- Finally, both send Change Cipher Spec (CCS) to tell the other to move to the record protocol.
+
+(eamonn: tls-1.2-handshake-detail.pdf)
+
+In the above image we see some more details.
+In CHello and SHello, \(r_A\) and \(r_B\) are the client and server randomness, and the long strings of text define different cipher suites: e.g. RSA for PKE, AES-128 in CBC mode for SKE and SHA1 for the hash function.
+
+Question:
+	This is not a good cipher suite, why?
+	
+Answer:
+	CBC mode is not an AEAD mode of operation and SHA1 is being (and is almost entirely) depreciated.
+	Furthermore, (though we have not discussed this) ephemeral Diffie--Hellman for the key exchange provides a security property called 'forward secrecy' in this setting, which RSA does not.
+
+Once server and client have agreed on TLS version and cipher suite, the server sends its public key and certificate chain, which the client verifies.
+
+Then the client samples a 'premaster secret' or PMS.
+It inputs this and the randomness thus far into a PseudoRandom Function (PRF) to generate a master secret (MS) and once again for a secret key \(K\).
+The various keys needed for the record protocol will all be derived from MS.
+Note, this will be many more than just the key \(K\) in this discussion.
+
+The client encrypts PMS under the server's public key and sends its to the server, so both share PMS.
+The server has all the information required to recompute MS and \(K\).
+
+Finally, in ClientFinished and ServerFinished the parties send an secret key encryption under \(K\) of their various information including public descriptors 'server' and 'client', the MS they both share and a hash of the transcript of the handshake protocol.
+Both check the other's Finished message and if correct continue to the record protocol.
+
+TLS 1.2 is an important protocol which provides strong security guarantees.
+It is by far the most complex single object we discuss in this course, in terms of the amount of communication between parties and the amount of cryptographic primitives being used concurrently.
+It is not perfect however, some downsides:
+
+- the number of rounds of communication required in the handshake protocol is two,
+- some 'legacy' cryptography still exists in TLS 1.2 that is depreciated or nearing depreciation (remember TLS 1.2 was standardised in 2008),
+- there are many possible combinations of cipher suites, making cipher suite negotiation complicated,
+- there are non AEAD cipher suite options available,
+- SHello and SCert are sent unencrypted, which leaks information about communication patterns,
+- the optional {SKeyExchange} means strong security properties like 'forward secrecy' are not achieved.
+
+TLS 1.3 solves all of the above problems.
+It achieves a one round handshake protocol, removes all legacy cryptography and reduces the cipher suite options to just five, all of which use AEAD modes, encrypts the first messages of the server and ensures both client and server perform a key exchange.
+There is a little subtlety: the handshake in total still takes two rounds, as in, there are two rounds of communication before the record protocol begins.
+However, only one round of communication in the handshake is required before the data being communicated is encrypted.
+
+It was designed over a much longer time period, with involvement from academia and industry, with twenty-eight (!) draft versions before final release.
+It is probably the most thoroughly studied cryptographical protocol ever standardised.
+
+(eamonn: tls-13-design.pdf)
+
+We are going to briefly discuss the 'TLS ecosystem', i.e. the wider entities that make TLS on the internet possible.
+This consists of
+- clients,
+- our web browsers which come preloaded with the certificates of certificating authorities,
+- servers, which clients interact with, and who interact with certificating authorities so they can prove the authenticity of their public key in the handshake protocol,
+- and the certificating authorities themselves who individually maintain parts of the PKI of the internet.
+
+Question:
+	To what extent is a certificating authority a trusted third party?
+	
+Answer:
+	Somewhat: correct management of certificates, such as expiration, replacement and validity, is important to prevent failures of authentication.
+	However, constrasting with Kerberos, they have no information regarding the PMS, MS and derived secret keys that will be used in the communication between client and server.
+	The trust we must place in them is much weaker, and there are also many (competiting) certificating authorities, rather than a single KDC.
+
+There are also implementations of the TLS protocols that run in browsers and servers, such as OpenSSL and BoringSSL.
+
+In terms of research and design, the IETF has a TLS working group, and the more generalist Crypto Forum Research Group (CFRG).
+In broader academia there are specialists in protocol design, security proofs for protocols and formal verification of these proofs.
+In industry there are companies, such as content delivery networks (CDNs), certificate authorities, network hardware and software vendors and so forth with in house research teams who interact with the above.
+
+We briefly describe TLS 1.3 via the image below.
+In particular, we focus on the earlier encryption, which is represented by the greenish box, and before which there is only one round of communication.
+
+(eamonn: tls-13-handshake.pdf)
+
+In CHello the client samples randomness and sends a value \(g^x\).
+It is assuming it knows which cipher suites the server accepts, since this has been reduced to five, this is likely to be true!
+(There is an  optional extra round of communication if the client 'guesses' wrong, we assume we are not in this case.)
+
+In SHello the server responds with some randomness and a value \(g^y\).
+
+These values are to be used for a Diffie--Hellman key exchange!
+In particular, both the client and server can compute \(g^{xy}\) as they know \(x\) and \(y\) respectively.
+They each input \(g^{xy}\), the two random values they each share and some other shared contextual information into a key derivation function to receives two shared secret keys \(k_h\) and \(k_a\).
+Only \(k_h\) will be used in the rest of the handshake protocol.
+
+In particular, a similar authentication process to in TLS 1.2 now follows, where at least the server sends its public key, a certificate chain and a signed hash of the transcript thus far.
+However, this time it is all encrypted under the shared \(k_h\).
+
+The client can authenticate as in TLS 1.2, the only distinction is that none of this identifying information is sent unencrypted.
+As such, the number of rounds before communications are encrypted is just one, rather than two in TLS 1.2.
+
+The client may optionally authenticate themself to the server, and using the Server Finished and Client Finished messages to check their views of the transcripts are identical, they can move onto the record protocol.
+
+In the record protocol, a carefully designed key derivation schedule is used.
+In the image below DHE is the key \(k_a\) above and PSK is a preshared key that may exist if the client and server have communicated before.
+This key derivation schedule ensures a powerful security notion called forward secrecy, that roughly allows security to recover even if previous secret keys are released or learnt by an adversary.
+This image is only for demonstrative purposes, you do not have to learn it!
+
+(eamonn: key-derivation-tls-13.png)
+
+In conclusion, almost all connections to servers on the internet (at least the top 150,000 websites) support TLS 1.2.
+Many also support TLS 1.3, but many also support older variants of TLS (or even SSL) that are insecure by today's standards.
+This raises the point of how difficult it is to migrate a distributed network to new standards, and the time and effort this can take.
+
+You have seen that cryptographic protocols are complicated, using many cryptographic primitives in tandem, and somehow relying on a proper combination of them and their security properties to achieve broader security goals against more powerful and interactive adversaries.
+
+If there is one lesson you should take from this lecture: if you ever configure a server, use only standardised and non depreciated versions of TLS (preferably 1.3), and if you're ever conducting important transactions or sharing sensitive data with a server, make sure it is too!

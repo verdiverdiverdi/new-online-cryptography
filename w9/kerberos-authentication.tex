@@ -1,0 +1,22 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{tikzpeople}
+\input{figure-macros}
+
+\begin{document}
+
+\begin{tikzpicture}
+					\node[alice, monitor, label=Client, minimum size=1.5cm] (C) at (-5,0) {};
+					\node[database] (AS) at (10,0) {AS};
+					\node (ASLBL) at (10,1.25) {Authentication Server};
+					\draw [decorate, decoration = {brace}, ultra thick] (12.5,1) --  (12.5,-1);
+					\node (ASLBL) at (15.25,0) {\Huge Authentication};
+					
+					
+					\draw[->, ultra thick] ([yshift=0.5cm,xshift=1cm]C.east) -- ([yshift=0.5cm]AS.west)  node[midway, above] {1. Request AuthTicket};
+					\draw[<-, ultra thick] ([yshift=-0.5cm,xshift=1cm]C.east) -- ([yshift=-0.5cm]AS.west)  node[midway, above] {2. AuthTicket and session key};
+				\end{tikzpicture}
+
+\end{document}

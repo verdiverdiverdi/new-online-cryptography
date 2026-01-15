@@ -1,0 +1,24 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{tikzpeople}
+\input{figure-macros}
+
+\begin{document}
+
+\begin{tikzpicture}
+
+					\node[alice, monitor, label=Client, minimum size=1.5cm] (C) at (-5,0) {};
+					\node[bob, monitor, label=Service Server, minimum size=1.5cm, mirrored] (SS) at (10,0) {};
+					\draw [decorate, decoration = {brace}, ultra thick] (12.5,1) --  (12.5,-1);
+					\node (ASLBL) at (15.25,0) {\Huge Service};
+					
+					\draw[->, ultra thick] ([yshift=0.5cm,xshift=3cm]C.east) -- ([yshift=0.5cm,xshift=-1cm]SS.west)  node[midway, above] {5. Request Service};
+					\draw[<-, ultra thick] ([yshift=-0.5cm,xshift=3cm]C.east) -- ([yshift=-0.5cm,xshift=-1cm]SS.west)  node[midway, above] {6. Confirm Service};
+
+
+
+\end{tikzpicture}
+
+\end{document}

@@ -1,0 +1,24 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{tikzpeople}
+\input{figure-macros}
+
+\begin{document}
+
+\begin{tikzpicture}
+
+				\node[alice, monitor, label=Client, minimum size=1.5cm] (C) at (-5,0) {};
+				\node (TGSLBL) at (5,1.25) {Ticket Granting Server};
+				\node[scale=0.65] (TGS) at (5,0) {\usebox\Server};
+				\node (AUTH) at (10,1.75)  {$id_{A},\textnormal{TGS},k_{A,TGS},T_1 =$ Dec$_{K_{AS,TGS}}(\textnormal{AuthTicket})$};
+                \node (AUTH) at (10,0.75)  {${id}_{A},T_2 \gets$ Dec$_{K_{A,TGS}}(\textnormal{Authenticator})$ };
+				\node (AUTH) at (10,0)  {$k_{A,B} \gets \mathcal{K}$};
+				\node (AUTH) at (10,-0.75)  {ServTicket = Enc$_{k_{B,TGS}}({id}_{A},{id}_{B},k_{A,B},T_3)$};
+				
+				\draw[->, ultra thick] ([yshift=0.5cm,xshift=1cm]C.east) -- ([yshift=0.5cm]TGS.west)  node[midway, above] {3. AuthTicket, Enc$_{k_{A,TGS}}({id}_{A},T_2)$, $id_{B}$};
+				\draw[<-, ultra thick] ([yshift=-0.5cm,xshift=1cm]C.east) -- ([yshift=-0.5cm]TGS.west)  node[midway, above] {4. Enc$_{k_{A,TGS}}(k_{A,B},\textnormal{B},T_3,\textnormal{ServTicket})$};
+\end{tikzpicture}
+
+\end{document}

@@ -1,0 +1,25 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{tikzpeople}
+\input{figure-macros}
+
+\begin{document}
+
+\begin{tikzpicture}
+				\node[alice, monitor, label=Client, minimum size=1.5cm] (C) at (-5,0) {};
+				\node[database] (AS) at (5,0) {AS};
+				\node (ASLBL) at (5,1.25) {Authentication Server};
+				\node (AUTH) at (10,1)  {$k_{A,TGS} \gets \mathcal{K}$};
+				\node (AUTH) at (10,0)  {AuthTicket = Enc$_{k_{AS,TGS}}(id_{A},\textnormal{TGS},k_{A,TGS},T_1)$};
+				
+				\draw[->, ultra thick] ([yshift=0.5cm,xshift=1cm]C.east) -- ([yshift=0.5cm]AS.west)  node[midway, above] {1. id$_A$, TGS};
+				\draw[<-, ultra thick] ([yshift=-0.5cm,xshift=1cm]C.east) -- ([yshift=-0.5cm]AS.west)  node[midway, above] {2. Enc$_{k_{A,AS}}(\textnormal{TGS},k_{A,TGS},T_1,\textnormal{AuthTicket})$};
+			\end{tikzpicture}
+
+
+
+
+
+\end{document}
