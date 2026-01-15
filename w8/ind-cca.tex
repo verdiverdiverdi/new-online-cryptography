@@ -43,10 +43,10 @@
 
 \node[] (B0) at (12,1) {\textbf{abort} \textbf{if} $|m_0| \neq |m_1|$};
 \node[] (B0) at (11,.5) {\textbf{if} $b=0:$};
-\node[] (Enc) at (12,0) {$c_b \gets \Enc(k,m_0)$};
+\node[] (Enc) at (12,0) {$c_b \gets \Enc(pk,m_0)$};
 
 \node[] (B0) at (11,-.5) {\textbf{if} $b=1:$};
-\node[] (Enc) at (12,-1) {$c_b \gets \Enc(k,m_1)$};
+\node[] (Enc) at (12,-1) {$c_b \gets \Enc(pk,m_1)$};
 
 \node[] (setc) at (11,-1.5) {set $c^* = c$};
 
