@@ -1,0 +1,70 @@
+\documentclass[final]{problemset}
+
+\usepackage{tikz}
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=blue!20,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {\ensuremath{#2}};\phantom{#2}}
+
+\newcommand{\MAC}{\ensuremath{\mathsf{MAC}}}
+\newcommand{\KGen}{\ensuremath{\mathsf{KGen}}}
+\newcommand{\Tag}{\ensuremath{\mathsf{Tag}}}
+\newcommand{\Vf}{\ensuremath{\mathsf{Vf}}}
+
+\newcommand{\SKE}{\ensuremath{\mathsf{SKE}}}
+\newcommand{\Enc}{\ensuremath{\mathsf{Enc}}}
+\newcommand{\Dec}{\ensuremath{\mathsf{Dec}}}
+
+\begin{document}
+    \heading[Postlethwaite]{Eamonn W.~Postlethwaite}{Cryptography}{Problem Set 1}{March 25th 2026}
+
+    \problem[On intuition for confidentiality.]
+
+    $i$. In \S 1.9 we introduced notions of `confidentiality' and `alt-confidentiality'.
+
+	Give an example of partial information an adversary might learn about a message from observing its ciphertext, short of the learning the message entirely, that would prevent you from calling the encryption scheme secure.
+
+	(Hint: imagine the message contains a day of the week and the adversary can learn some very partial decryption.)
+
+	\solution{%
+		In the hint I give, it is enough to know the first two letters of any day of the week to uniquely determine it: MOnday, TUesday, WEdnesday, THursday, FRiday, SAturday, SUnday.
+
+		This may seem like a contrived example, but it serves to indicate that we need a way to reason about ciphertexts revealing (almost) no information, independent of context -- an encryption scheme should be universally useable; not depending on the messages it will be used to encrypt, or the situation in which it will be used.
+	}
+	
+	$ii$. Can you think of a further example where `less' partial information is learnt by an adversary than your answer to ($i$.)?
+
+	(Hint: imagine the message is a binary string that encodes the number of people in a given population with a particular medical condition or in receipt of state assistance.)
+
+    \solution{%
+		Perhaps each person in the population with the condition/in receipt of the assistance is denoted with $1$ and otherwise with $0$.
+		Assume an adversary can determine the number of ones in the message by observing the ciphertext.
+		(Not their position, just the number!)
+		If the adversary is an insurance company or a payday loans company trying to access confidential data to get a market edge then it may use this information to target one population more than another.
+    }
+
+    $iii$. In \S 1.9 we also gave an incomplete definition of confidentiality.
+	An adversary selects two messages of the same length and receives an encryption of one of them (it does not know which).
+	The adversary wins if, by looking at the ciphertext, it can tell which of the messages it selected was encrypted.
+
+	Given ($i$.) and ($ii$.), suggest why this is sensible way to start thinking about confidentiality.
+
+    \solution{%
+		Suppose there is some property of a message (some `information' about it) that an adversary can determine from the ciphertext.
+		This might be, as in the above, the first two letters of its decryption, or the number of times a $1$ appears.
+		The adversary selects two messages that differ in this particular way, e.g. AA and AB or $00000$ and $11111$ and it will succeed in knowing which of the messages it submitted were encrypted.
+
+	If, in the contrapositive, an adversary \emph{cannot} win, it means there is no such property of a message the adversary can learn from observing ciphertexts.
+	That is, it has not learnt anything from the ciphertext!
+	}
+
+    \problem[On intuition for integrity.]
+
+    $i$. 
+
+    \solution{%
+    }
+
+    $ii$. 
+
+    \solution{%
+    }
+
+\end{document}

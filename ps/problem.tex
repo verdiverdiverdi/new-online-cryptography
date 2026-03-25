@@ -1,0 +1,235 @@
+\documentclass[finalnosol]{problemset}
+
+\usepackage{tikz}
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=blue!20,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {\ensuremath{#2}};\phantom{#2}}
+
+\newcommand{\MAC}{\ensuremath{\mathsf{MAC}}}
+\newcommand{\KGen}{\ensuremath{\mathsf{KGen}}}
+\newcommand{\Tag}{\ensuremath{\mathsf{Tag}}}
+\newcommand{\Vf}{\ensuremath{\mathsf{Vf}}}
+
+\newcommand{\SKE}{\ensuremath{\mathsf{SKE}}}
+\newcommand{\Enc}{\ensuremath{\mathsf{Enc}}}
+\newcommand{\Dec}{\ensuremath{\mathsf{Dec}}}
+
+\begin{document}
+    \heading[Postlethwaite]{Eamonn W.~Postlethwaite}{Cryptography, 6CCS3CIS}{Problem Set 1}{September 29, 2025}
+
+    \problem[On integrity.]
+    We formalise the sketch of the cryptographic approach\footnote{%
+        Throughout all objects that a communicating pair should keep secret are $\mybox{\mathrm{boxed~like~this}}$.
+        Generally these are `keys'.
+    }
+    for integrity given in the first recorded lecture.
+    Recall, a message authentication code ($\MAC$) is a triple of algorithms $\MAC = (\KGen, \Tag, \Vf)$ where
+    \begin{itemize}
+        \item the algorithm $\KGen$ outputs an integrity key $\mybox{ik}$,
+        \item on input an integrity key $\mybox{ik}$ and a message $m$ the algorithm $\Tag(\mybox{ik}, m)$ outputs a tag $\tau$,
+        \item on input an integrity key $\mybox{ik}$, a message $m$ and a tag $\tau$ the algorithm $\Vf(\mybox{ik}, m, \tau)$ outputs either $0$ or $1$.
+    \end{itemize}
+    In the above $\KGen$ denotes `key generation' and $\Vf$ denotes `verify'.
+    The intuition is that a communicating pair (Alice and Bob) share $\mybox{ik}$.
+    When Alice wishes to send a message $m$ to Bob she creates a tag $\tau = \Tag(\mybox{ik}, m)$ and sends $(m, \tau)$.
+    Bob then checks $\Vf(\mybox{ik}, m, \tau) = 1$.
+    If $\Vf$ outputs $1$ then we say $\tau$ is a valid tag for $m$ under $\mybox{ik}$, else it is invalid.
+
+    $i$. What should correctness mean for a $\MAC$?
+
+    \solution{%
+        If $\tau = \Tag(ik, m)$ then $\Vf(ik, m, \tau) = 1$. That is, `it works'.
+    }
+
+    You may wish to consider the definition of correctness given for SKE in the first recorded lecture.
+
+    $ii$. Design a correct $\MAC$. It does not have to satisfy any security properties.
+
+    \solution{%
+        There are many possible answers. A simple one is where $\Vf(ik, m, \tau) = 1$ for all $ik$, $m$ and $\tau$.
+        It is certainly correct, if useless.
+
+        A slightly less abstract one might be $\Tag(ik, m) = 0$ for all $ik$ and $m$, and $\Vf(ik, m, 0) = 1$ for all $ik$ and $m$.
+
+        This is a good opportunity to recall that correctness is purely a functional idea, not a security property.
+    }
+
+    $iii$. In the first recorded lecture we informally used a $\MAC$ to ensure the integrity of ciphertexts. How would we achieve this in the syntax of $\MAC = (\KGen, \Tag, \Vf)$ given above?
+
+    \solution{%
+        Let the message $m$ that is input into $\Tag$ be the ciphertext.
+        We revisit this in Problem 2.
+    }
+
+    We are going to consider how to define a security property for a $\MAC$.
+    Assume the $\MAC$ is correct, as per your answer to ($i$.), and that some $\mybox{ik}$ has been output by $\KGen$.
+    We say an adversary can `forge a tag for message $m$' if it can create a valid tag on $m$ without knowing $\mybox{ik}$, that is if it can create some $\tau$ such that $\Vf(\mybox{ik}, m, \tau) = 1$.
+    Here is a list of potential definitions for a security property.
+
+    \begin{itemize}
+        \item (D1) An adversary should not be able to recover $\mybox{ik}$ by observing $(m_i, \tau_i)$ such that $\tau_i = \Tag(\mybox{ik}, m_i)$.
+%        \item (D2) An adversary should not be able to forge a tag on any message $m$ by observing $(m_i, \tau_i)$ such that $\tau_i = \Tag(\mybox{ik}, m_i)$.
+
+        \item (D2) Let an adversary have access to $\Tag(\mybox{ik}, \cdot)$. The adversary should not be able to forge a tag on any message $m$.
+        \item (D3) Let an adversary have access to $\Tag(\mybox{ik}, \cdot)$ and $Q$ be the set of messages this adversary has input into $\Tag(\mybox{ik}, \cdot)$. The adversary should not be able to forge a tag on any message not in $Q$.
+    \end{itemize}
+	The notation $\Tag(\mybox{ik}, \cdot)$ means the adversary has a black-box function which takes as input a message $m$ and outputs the tag $\Tag(\mybox{ik}, m)$.
+    The adversary cannot `see inside' this function, i.e.~does not know what $\mybox{ik}$ is.
+
+    Recall that a definition for a security property comprises two elements; an action that should not be possible for an adversary $(*)$ and a description of the abilities of an adversary $(\dagger)$.
+
+    $iv$. What are $(*)$ and $(\dagger)$ for each of (D1)--(D3)?
+
+    \solution{%
+        $(*)$ are; an adversary should not be able to recover $ik$, an adversary should not be able to forge a tag on any message $m$ and an adversary should not be able to forge a tag on any message $m$ it has not seen a tag for (i.e.~messages not in $Q$).
+
+        $(\dagger)$ are; the ability to observe tags and access to $\Tag(ik, \cdot)$.
+    }
+
+    To achieve a definition an object (here a $\MAC$) that satisfies it must be shown to exist.
+    To show a definition cannot be achieved it must be shown that no such object exists.
+
+    One definition is at least as strong as another if it is at least as hard to achieve.
+    One definition is stronger than another if it is harder to achieve.
+    That is, (DX) is at least as strong as (DY) whenever every $\MAC$ satisfying (DX) also satisfies (DY).
+    Furthermore, (DX) is stronger than (DY) if it is at least as strong as (DY) and there exists a $\MAC$ satisfying (DY) that does not satisfy (DX).
+
+    $v$. What is the strongest definition of (D1)--(D3)? Can it be achieved?
+
+    \solution{%
+        The strongest definition is (D2) and it cannot be achieved.
+        The adversary inputs some message $m$ into $\Tag(ik, \cdot)$ to receive $\tau = \Tag(ik, m)$ and then has forged a tag.
+        (This is why we introduce the set $Q$ in (D3).)
+    }
+
+    $vi$. Which definition from (D1)--(D3) should we select as a security definition of a $\MAC$? Why?
+
+    \solution{%
+        We should pick (D3).
+        It is the strongest definition from (D1)--(D3) except for (D2), which is impossible to achieve per ($v$.).
+        This might be a good opportunity to reiterate the idea that we want to consider adversaries that are as strong as possible, as if we can prove some security property against such powerful adversaries, it will also hold for all weaker adversaries.
+    }
+
+    $vii$. Can you think of a definition that is at least as strong as your answer to ($vi$.) but still achievable? (Hint: $\Tag$ can be randomised, i.e.~on a given message may output multiple valid tags. Consider (D3).)
+
+    \solution{%
+        This may be the hardest problem in this set.
+        The idea is that if $\Tag(ik, \cdot)$ is randomised then one can have many valid tags per message $m$ under $ik$.
+        That is, if I call $\Tag(ik, m)$ three times then I receive three tags $\tau_1, \tau_2$ and $\tau_3$ that may differ.
+        A stronger security property in this setting is
+
+        (D4) Let an adversary have access to $\Tag(ik, \cdot)$ and $Q$ be the set of pairs of messages this adversary has input into $\Tag(ik, \cdot)$ and the tags output. (That is $Q = \{(m_1, \tau_1), (m_2, \tau_2), \cdots\}$ where $\tau_i = \Tag(ik, m_i)$.)
+    The adversary should not be able to produce a message $m$ and a valid tag $\tau$ on it under $ik$ such that $(m, \tau)$ is not in $Q$.
+
+    In words this say `the adversary should not be able to forge a \emph{new} valid tag on some message $m$, even having possibly seen some other valid tags on $m$'.
+    }
+
+    We did not give the adversary access to $\Vf$ in any of our potential definitions.
+    The next question examines whether this is an important omission.
+
+    $viii$. Assume that
+    \begin{itemize}
+        \item $\Vf(\mybox{ik}, m, \tau)$ computes $\tau' = \Tag(\mybox{ik}, m)$ and returns $1$ if $\tau = \tau'$ and $0$ otherwise, and
+        \item $\Tag(\mybox{ik}, \cdot)$ is deterministic, i.e.~on a given message always outputs the same tag.
+    \end{itemize}
+    This is called canonical verification for a deterministic $\MAC$.
+
+    Given these assumptions, is an adversary with access to $\Tag(\mybox{ik}, \cdot)$ made more powerful by giving it access to $\Vf(\mybox{ik}, \cdot, \cdot)$?
+    (Hint: use an adversary's access to $\Tag(\mybox{ik}, \cdot)$ to `build' canonical verification.)
+
+    \solution{%
+        No, the adversary is not made more powerful.
+        Given access to $\Tag(ik, \cdot)$ one may `build' $\Vf(ik, \cdot, \cdot)$ as follows
+        \begin{itemize}
+            \item on input $(m, \tau)$ let $\tau' = \Tag(ik, m)$, recalling the adversary has access to $\Tag(ik, \cdot)$,
+            \item return $1$ if $\tau = \tau'$ and $0$ otherwise.
+        \end{itemize}
+        We have efficiently `built' $\Vf(ik, \cdot, \cdot)$ from $\Tag(ik, \cdot)$ so access to $\Vf(ik, \cdot, \cdot)$ does not strengthen an adversary that already has access to $\Tag(ik, \cdot)$, at least in the case of canonical verification, per our assumptions.
+    }
+
+    \problem[On encryption.]
+
+    Recall, a (secret key) encryption scheme $(\SKE)$ is a triple of algorithms $\SKE = (\KGen, \Enc, \Dec)$ where
+
+    \begin{itemize}
+        \item the algorithm $\KGen$ outputs a secret key $\mybox{sk}$,
+        \item on input a secret key $\mybox{sk}$ and a message $m$ the algorithm $\Enc(\mybox{sk}, m)$ outputs a ciphertext $c$,
+        \item on input a secret key $\mybox{sk}$ and a ciphertext $c$ the algorithm $\Dec(\mybox{sk}, c)$ outputs a message $m$.
+    \end{itemize}
+    In the above $\Enc$ denotes `encrypt' and $\Dec$ denotes `decrypt'.
+    Correctness and informal security definitions for a $\SKE$ are discussed in the first recorded lecture.
+    In the below assume a correct $\SKE$ and that some $\mybox{sk}$ has been output by $\KGen$.
+
+    $i$. Assume an adversary has access to $\Enc(\mybox{sk}, \cdot)$.
+    Describe a scenario where $\Enc$ being deterministic, i.e.~on a given message always outputs the same ciphertext, is undesirable. (Hint: consider scenarios where you might often expect to see similar and stereotyped messages.)
+
+    \solution{%
+        Consider some situation where the messages you expect are binary, e.g.~BUY/SELL, YES/NO, ATTACK/NO ATTACK\@, etc.
+        (Of course, binary is the most extreme case, any small enough expected set of messages would be bad.)
+        Taking e.g.~the BUY/SELL example, imagine some stock brockers encrypt their instructions.
+        I can still observe their ciphertexts, and then observe their actions, i.e.~when they buy or sell different stocks.
+        If encryption is deterministic, I can infer what the ciphertexts for BUY and SELL are, so that they are functionally no longer encrypted.
+
+        There are many variations on this theme.
+    }
+
+    Now also consider a $\MAC$ that is `perfect'.
+    (This is not a formal definition, merely meant to imply that no adversary can forge under any circumstances.)
+    We will discuss how the following approach may be used to counter replay, reordering and reflection attacks, as introduced in the first recorded lecture.
+
+    To send a message $m$ given $\mybox{(sk, ik)}$
+    \begin{itemize}
+        \item let $c = \Enc(\mybox{sk}, m)$ and $\tau = \Tag(\mybox{ik}, c)$,
+        \item send $\tilde{c} = (c, \tau)$.
+    \end{itemize}
+
+    To receive a message $\tilde{c} = (c, \tau)$ given $\mybox{(sk, ik)}$
+    \begin{itemize}
+        \item check that $\Vf(\mybox{ik}, c, \tau) = 1$ and if not abort,
+        \item if there was no abort, let $m = \Dec(\mybox{sk}, c)$.
+    \end{itemize}
+%    To send a message $m$ given $(sk, ik)$ let $c = \Enc(sk, m)$, let $\tau = \Tag(ik, c)$, and let $\tilde{c} = (c, \tau)$.
+%    To receive a message $\tilde{c} = (c, \tau)$ given $(sk, ik)$ check $\Vf(ik, c, \tau) = 1$ and otherwise abort.
+%    If no abort, let $m = \Dec(sk, c)$.
+
+    $ii$. How might you add information to the message $m$ to prevent replay, reordering and reflection attacks? (Hint: consider information that unambiguously defines `freshness', `order' and `direction', respectively.)
+
+    \solution{%
+        One may prepend the date and time for freshness, some counter that increments for order and an intended sender and recipient for direction.
+        For example if my first message of today to Khanh is `shall we get pizza?' I could instead consider the extended message `2024/09/11,13:20,message\#1,eamonn-to-khanh,shall we get pizza?'.
+        I would then form $\tilde{c}$ as above.
+
+        The idea is that, because the $\MAC$ is `perfect', there is no way for the ciphertext to be altered en route without the recipient knowing.
+        Therefore the message received is exactly as sent or ignored if $\Vf$ fails.
+
+        If $\tilde{c}$ is replayed, Khanh will know because the time and date will repeat.
+        If $\tilde{c}$ is reordered with another, the message counter will be wrong.
+        If $\tilde{c}$ is reflected back to me, I will know it was meant to be sent from me to Khanh.
+    }
+
+    $iii$. If the adversary is able to selectively deny delivery of some $\tilde{c}$, how does this affect your answer to ($ii$.)?
+
+    \solution{%
+        There are many possible answers.
+        I think the most simple one considers reordering.
+        Say I create $\tilde{c}_1$ and $\tilde{c}_2$ as above for
+
+        $m_1 = $`2024/09/11,13:20,message\#1,eamonn-to-khanh,shall we get pizza?', and
+
+        $m_2 = $`2024/09/11,13:40,message\#2,eamonn-to-khanh,actually Thai?',
+
+        and send $\tilde{c}_1$ followed by $\tilde{c}_2$ to Khanh.
+        If the adversary denies delivery of $\tilde{c}_1$, when Khanh receives, verifies and decrypts $\tilde{c}_2$ he will see the message counter is wrong and may ignore the message.
+    }
+
+    \problem[On cryptography as munitions.]
+
+    $i$. Read either of the articles cited in the intermission of the first recorded lecture.
+
+    $ii$. Write (pen/pencil and paper) your thoughts about the article you have read.
+    Try for a side of A4.
+    Are you surprised how quickly `purely technical' objects, like cryptography and source code, become socially and legally vexed?
+
+    \solution{%
+        Read and then write.
+    }
+
+\end{document}
