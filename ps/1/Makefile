@@ -1,0 +1,2 @@
+pdf:
+	lualatex solution.tex

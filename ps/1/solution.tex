@@ -17,19 +17,20 @@
 
     \problem[On intuition for confidentiality.]
 
-    $i$. In \S 1.9 we introduced notions of `confidentiality' and `alt-confidentiality'.
+    $i$. In \S 1.9 we introduced notions of `confidentiality' and `alt-confidentiality' where (roughly) confidentiality was achieved when nothing could be learnt about a message and alt-confidentiality was achieved when the message could not be read (or: learnt in its entirety).
 
-	Give an example of partial information an adversary might learn about a message from observing its ciphertext, short of the learning the message entirely, that would prevent you from calling the encryption scheme secure.
+	Give an example of partial information an adversary might learn about a message from observing its ciphertext, short of the learning the message entirely, that would prevent you from calling an encryption scheme secure.
 
 	(Hint: imagine the message contains a day of the week and the adversary can learn some very partial decryption.)
 
 	\solution{%
 		In the hint I give, it is enough to know the first two letters of any day of the week to uniquely determine it: MOnday, TUesday, WEdnesday, THursday, FRiday, SAturday, SUnday.
 
-		This may seem like a contrived example, but it serves to indicate that we need a way to reason about ciphertexts revealing (almost) no information, independent of context -- an encryption scheme should be universally useable; not depending on the messages it will be used to encrypt, or the situation in which it will be used.
+		This may seem like a contrived example, but it serves to indicate that we need a way to reason about ciphertexts revealing (almost) no information, independent of context.
+		An encryption scheme should be universally useable; not depending on the messages it will be used to encrypt, or the situation in which it will be used.
 	}
 	
-	$ii$. Can you think of a further example where `less' partial information is learnt by an adversary than your answer to ($i$.)?
+	$ii$. Give a further example where `less' partial information is learnt by an adversary than your answer to ($i$.)?
 
 	(Hint: imagine the message is a binary string that encodes the number of people in a given population with a particular medical condition or in receipt of state assistance.)
 
@@ -44,12 +45,12 @@
 	An adversary selects two messages of the same length and receives an encryption of one of them (it does not know which).
 	The adversary wins if, by looking at the ciphertext, it can tell which of the messages it selected was encrypted.
 
-	Given ($i$.) and ($ii$.), suggest why this is sensible way to start thinking about confidentiality.
+	Given ($i$.) and ($ii$.) suggest why this is sensible way to start thinking about confidentiality.
 
     \solution{%
-		Suppose there is some property of a message (some `information' about it) that an adversary can determine from the ciphertext.
+		Suppose there is some property of a message (some `information' about it) that an adversary can learn from the ciphertext.
 		This might be, as in the above, the first two letters of its decryption, or the number of times a $1$ appears.
-		The adversary selects two messages that differ in this particular way, e.g. AA and AB or $00000$ and $11111$ and it will succeed in knowing which of the messages it submitted were encrypted.
+		The adversary selects two messages that differ in this particular way, e.g. AA and AB or $00000$ and $11111$ and will therefore succeed in knowing which of the messages it submitted were encrypted.
 
 	If, in the contrapositive, an adversary \emph{cannot} win, it means there is no such property of a message the adversary can learn from observing ciphertexts.
 	That is, it has not learnt anything from the ciphertext!
@@ -57,14 +58,27 @@
 
     \problem[On intuition for integrity.]
 
-    $i$. 
+    $i$. In \S 1.10 we introduced the notion of integrity where (roughly) integrity is achieved if the party who receives a message is able to detect whether it has been altered, accidentally or maliciously, in transit.
+
+	Give an example of communication where integrity is the appropriate security notion, rather than confidentiality.
 
     \solution{%
+		Any situation where the message can be public but alterations must be detected by the recipient is enough.
+		For example, political manifestos: political parties want people to read and widely disseminate them, but do not want anyone (rival political parties, perhaps) altering the policies suggested within.
     }
 
-    $ii$. 
+    $ii$. Suppose that the `message' received is a ciphertext, i.e.~someone has encrypted a message and sent it.
+	Give an example where, even if the confidentiality of the encrypted message is certain, integrity remains a necessary security property.
+
+	(Hint: imagine an adversary knows how to modify the ciphertext such that the underlying encrypted message is modified in an understood way, even when the adversary knows nothing about this message.
+
+	For example, imagine that modifying ciphertext $c$ to $c'$ modifies the underlying encrypted message $m$ to $m' = m \Vert 0$, that is, the original encrypted message $m$ with a $0$ appended.)
 
     \solution{%
+		Suppose that ciphertext $c$ encrypts an instruction to your bank to pay someone £10.
+		If an adversary knows a way to modify $c$ to $c'$ that appends a $0$ to the encrypted message, they will receive ten times more money than you intended to send.
+
+		Even if they do not know the original amount being sent, appending a $0$ always multiplies it by ten (provided it was not £0).
     }
 
 \end{document}
